@@ -634,3 +634,80 @@ button.ctl-btn.spark:hover {
 .handoff a:hover {
   color: var(--amber);
 }
+
+/* ── Landing: thesis + one live door + one promise line. No ghost cards. ── */
+.landing {
+  padding-top: 64px;
+  max-width: 860px;
+}
+
+.landing .lede {
+  margin-bottom: 34px;
+}
+
+.door {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 24px;
+  text-decoration: none;
+  background: var(--chrome);
+  border: 1px solid var(--chrome-line);
+  border-radius: var(--r);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.door:hover {
+  border-color: #2a3140;
+  background: #151922;
+}
+
+.door-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+}
+
+.door-body {
+  display: grid;
+  gap: 5px;
+}
+
+.door-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.door-line {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.door-meta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  letter-spacing: 0.06em;
+}
+
+.door-go {
+  margin-left: auto;
+  color: var(--ink-faint);
+  font-size: 18px;
+}
+
+.door:hover .door-go {
+  color: var(--amber);
+}
+
+.promise {
+  margin: 18px 2px 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}

@@ -2,11 +2,30 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Cascade" description="One small thing, enormous consequences.">
-  <section class="page">
+<BaseLayout
+  title="Cascade — one small thing, enormous consequences"
+  description="Three ways the world turns a small cause into an enormous effect. Live simulations you drive yourself."
+>
+  <section class="page landing">
     <p class="kicker">Cascade</p>
     <h1>One small thing, enormous consequences.</h1>
-    <p class="lede">The real landing lands in Task 8.</p>
-    <p style="margin-top:20px"><a href="/forest-fire">→ Forest fire</a></p>
+    <p class="lede">
+      Three ways the world does it — threshold, criticality, cascade. Each one is a live simulation you
+      drive yourself, and a plot built from your own runs.
+    </p>
+
+    <a class="door" href="/forest-fire">
+      <span class="door-num">01</span>
+      <span class="door-body">
+        <span class="door-title">Forest fire</span>
+        <span class="door-line">
+          Below a line a spark fizzles. A hair past it, the same spark takes everything.
+        </span>
+        <span class="door-meta">threshold · site percolation · d_c ≈ 0.59</span>
+      </span>
+      <span class="door-go">→</span>
+    </a>
+
+    <p class="promise">criticality and cascade — the next two exhibits.</p>
   </section>
 </BaseLayout>
