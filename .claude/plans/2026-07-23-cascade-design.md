@@ -101,15 +101,15 @@ Fire & sandpile are **2D grid cellular automata**; network is a **graph**. Both 
 - **Layout & theme** (palette tokens, dark stage, plot panel, control bar).
 - **Control bar** — shared control vocabulary (§3.3), bound generically to the active exhibit's params/actions.
 - **Beat-runner** — runs an exhibit's scripted on-ramp beats (§3.4), then releases to free play.
-- **Signature-plot component** — a reusable canvas/SVG plot that accepts the exhibit's `sample()` stream and a plot config (axes, annotation, ramp). One component, three configurations.
+- **Signature-plot component** — a reusable canvas/SVG plot that accepts the exhibit's `sample()` stream and a plot config (axes, annotation, ramp). One component, several configurations: exhibit-live · exhibit-on-ramp (ticket 02) · coda (ticket 03) · **`sandpile-live` (ticket 04) — log-log axes, a baked backbone series plus a live user series, annotation anchored to the running max**. Log scales are a real addition to `plot-geometry.ts`, not a config flag.
 - **Seed + reset** infrastructure (seedable PRNG, deterministic replays).
 - **A11y plumbing** — keyboard bindings, focus management, reduced-motion switch.
 
 ### 3.3 Shared control vocabulary
 | Control | Fire | Sandpile | Network |
 |---------|------|----------|---------|
-| **Parameter slider** | density *d* | drop-rate / grains | node load / tolerance α |
-| **Click-to-act** | Spark (ignite a tree) | Drop a grain | Knock out a node |
+| **Parameter slider** | density *d* | **none — the slot holds a read-only, non-focusable slope readout that drives itself (🔒 ticket 04)** | node load / tolerance α |
+| **Click-to-act** | Spark (ignite a tree) | Drop a grain at the clicked cell | Knock out a node |
 | **Play / Pause** | ✓ | ✓ (grain feed) | ✓ (cascade step) |
 | **Speed** | ✓ | ✓ | ✓ |
 | **Reset** | ✓ | ✓ | ✓ |
@@ -158,11 +158,20 @@ Runs 60fps at target grid size; the 3 beats reproduce reliably (seeded); crossin
 
 ## 5. Exhibits 2 & 3 (graduate onto the proven shell — new rule-sets)
 
-### 5.1 Sandpile / self-organized criticality
-- **Model:** Bak–Tang–Wiesenfeld. Grid; each cell holds grains; a cell with **≥4 grains topples**, sending 1 grain to each of its 4 neighbors; grains at the boundary leave the system. Grains drop one at a time (chosen cell or random); the pile **self-tunes to a critical slope**, after which a single grain can trigger an avalanche of *any* size.
-- **On-ramp beats:** (1) drop grains, watch the pile build; (2) it reaches a critical, self-maintained slope; (3) now one grain → sometimes a tiny shift, sometimes a system-wide avalanche — you can't predict which.
-- **Signature plot:** **log-log histogram of avalanche sizes** → a straight line = a **power law** (no characteristic scale). Label the slope as an approximate power-law exponent (2D BTW is commonly cited near τ ≈ 1.1–1.3; the literature reports a range — state it approximately, don't over-claim a precise value).
-- **Lesson:** catastrophes of every magnitude are built into critical systems and are fundamentally unpredictable.
+### 5.1 Sandpile / self-organized criticality (🔒 INSTRUMENT LOCKED — ticket 04)
+
+> **🔒 INSTRUMENT-LOCK (ticket 04, `/grilling`, approved by Dustin 2026-07-24).** 7 forks + 10 derived decisions, designed against the *built* shell: [`.scratch/cascade/issues/04-sandpile-instrument.md`](../../.scratch/cascade/issues/04-sandpile-instrument.md). **Spine: "nobody set the dial."** Exhibit 1 put the cliff wherever the user's hand put it; the pile walks to its own edge and parks there. That contrast is the trio's intelligence, and it is taken literally in the chrome, the stage, the charge, and the plot.
+
+- **Model:** Bak–Tang–Wiesenfeld. Grid; each cell holds grains; a cell with **≥4 grains topples**, sending 1 grain to each of its 4 neighbors; grains at the boundary leave the system. Grains drop one at a time (chosen cell or random); the pile **self-tunes to a critical slope**, after which a single grain can trigger an avalanche of *any* size. **Grid 64²** — bigger cells than fire's 128×82 so one topple is legible; ~8.7k grains resident at h̄≈2.125. Charge is a **seeded** drop sequence (replayable); Shuffle advances the seed.
+- **The dial (🔒):** the control bar's parameter slot holds a **read-only, self-driving slope readout** — mean grains/cell, a true order parameter — that climbs as the pile loads and **parks at ≈2.1**, marked with a critical tick. No handle, no groove, **not focusable**: un-touchability is the meaning. The sandpile has no user-owned parameter.
+- **Stage (🔒):** cell height 0→3 on a **cool→warm sequential ramp** (dim teal → amber), so the field visibly heats as it self-loads and settles into a tense mixed state; toppling cells flash **white-hot on the `FIRE` age ramp with the halo bloom** (unchanged machinery, `lighter` composite). Sequential + monotone luminance ⇒ CVD-safe by §1.2's rule. Rest field dimmed so topples keep contrast; every avalanche gets a **≥2-frame visible flash**.
+- **Two time bases (🔒):** **charge** ≈12 s, batched (~1.2k grains/s), no per-avalanche animation, the dial climbs — *watched, not skipped* (it is the proof of the spine), but **skippable and re-runnable**; then **critical**, one grain per click at the clicked cell, each avalanche animated as a front reusing fire's `paintFrame`/`ageOut`.
+- **Signature plot (🔒):** **log-log survival curve — the user's own avalanches, biggest first** (for each size *s*, how many were at least that big). No binning, so it reads as a clean straight line by ~20 avalanches and each drop inserts a point live; a **faint baked backbone** from one long build-time run sits underneath as the shape it converges to. Straight line = no bump = **no typical size**. Annotation **off the line** with a thin leader + hot-core dot on the **user's own max** (*"one grain, 6,140 cells"*). Source line: *"Bak–Tang–Wiesenfeld 1987 · τ ≈ 1.1–1.3 (approx.)"* — state the exponent approximately, never over-claim. *(The binned log-log histogram was the rejected alt: binning artifacts at low N, and the plot would be pre-baked rather than built by play.)*
+- **Readouts (🔒):** `grains` · **`1 grain → N cells`** · ratcheting `biggest`. The left side of the arrow **never changes** — that invariance is the small→big argument. `aria-live` on the pairing.
+- **Controls (🔒):** read-only `slope` dial · **● Drop** (click the stage, or Enter at the focus cell) · **▷ Feed** · **speed** · **⤫ Shuffle** · **↺ Reset**. Reduced motion: the avalanche is an immediate before/after swap, with the outcome carried by the readout + the new plot point. No-JS: the baked backbone, copy, and source line still render.
+- **Lesson:** catastrophes of every magnitude are built into critical systems and are fundamentally unpredictable — **and nobody set the dial.**
+- **Coda fill (for §6 / ticket 06):** `CRITICALITY` · the survival line · *"Systems drift to their own edge and stay there."* · **"Nobody set the dial."** · *"An idea going viral."*
+- **Build consequences this exhibit carries:** the shell's **first real engine generalization** (`Params.value` / `Stats` / `StepResult` in `src/lib/types.ts` are fire-shaped), **log scales** in `plot-geometry.ts` (fire's are linear), and the landing's **second live door** (§2).
 
 ### 5.2 Network cascade / blackout (apolitical power grid)
 - **Model (keep legible + cheap):** a modest graph (~100–200 nodes, grid-ish/small-world "power grid"). Each node carries a **load** with **capacity = load × (1 + tolerance α)**. **Knock out one node** → its load redistributes to connected neighbors → any neighbor now over capacity **fails** and pushes its load onward → **cascade**. Deterministic given (graph, α, which node). Most knock-outs are contained; a rare few collapse the grid.
@@ -219,7 +228,7 @@ Landing frames the thesis and register; `/synthesis` works with just exhibit 1's
 
 **Phase 4 — Ship exhibit 1** as a complete, standalone-valid piece (deploy + live-verify).
 
-**Phase 5 — Graduate exhibit 2 (sandpile),** then **exhibit 3 (network)** as new rule-sets on the proven shell (§5). Each: on-ramp beats + sandbox + its signature plot + live look-verify; extend the synthesis coda.
+**Phase 5 — Graduate exhibit 2 (sandpile),** then **exhibit 3 (network)** as new rule-sets on the proven shell (§5). Each: on-ramp beats + sandbox + its signature plot + live look-verify; extend the synthesis coda. **Exhibit 2 additionally carries** (🔒 ticket 04): the engine generalization off fire-shaped types, log scales in the plot component, a build-time baked survival backbone, and the landing's second live door.
 
 **Fallback:** if time runs short after Phase 4, one complete exhibit still ships as a finished product.
 
