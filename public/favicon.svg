@@ -1,6 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Cascade">
+  <defs>
+    <linearGradient id="c" x1="16" y1="4" x2="16" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2fb488"/>
+      <stop offset="0.42" stop-color="#ffd166"/>
+      <stop offset="0.78" stop-color="#ff8a3d"/>
+      <stop offset="1" stop-color="#ff5a5f"/>
+    </linearGradient>
+    <filter id="g" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.1"/>
+    </filter>
+  </defs>
   <rect width="32" height="32" rx="7" fill="#0a0c10"/>
-  <path d="M4 26 C 12 26, 15 25, 17 14 C 19 6, 24 6, 28 6"
-        fill="none" stroke="#ff8a3d" stroke-width="2.6" stroke-linecap="round"/>
-  <circle cx="17" cy="14" r="2.6" fill="#fff1c2"/>
+  <g fill="none" stroke-linecap="round">
+    <!-- glow underlay -->
+    <g stroke="url(#c)" stroke-width="3" opacity="0.5" filter="url(#g)">
+      <path d="M16 5.4 V10.8"/>
+      <path d="M16 10.8 C 14 13.5, 11.6 14.6, 10.4 17.8"/>
+      <path d="M16 10.8 C 18 13.5, 20.4 14.6, 21.6 17.8"/>
+      <path d="M10.4 17.8 C 9 20.6, 7.6 23.4, 6.6 26.6"/>
+      <path d="M10.4 17.8 C 11 21, 11.8 23.8, 12.4 26"/>
+      <path d="M21.6 17.8 C 21 21, 20.2 23.8, 19.6 26"/>
+      <path d="M21.6 17.8 C 23 20.6, 24.4 23.4, 25.4 26.6"/>
+    </g>
+    <!-- crisp strokes -->
+    <g stroke="url(#c)" stroke-width="2">
+      <path d="M16 5.4 V10.8"/>
+      <path d="M16 10.8 C 14 13.5, 11.6 14.6, 10.4 17.8"/>
+      <path d="M16 10.8 C 18 13.5, 20.4 14.6, 21.6 17.8"/>
+      <path d="M10.4 17.8 C 9 20.6, 7.6 23.4, 6.6 26.6"/>
+      <path d="M10.4 17.8 C 11 21, 11.8 23.8, 12.4 26"/>
+      <path d="M21.6 17.8 C 21 21, 20.2 23.8, 19.6 26"/>
+      <path d="M21.6 17.8 C 23 20.6, 24.4 23.4, 25.4 26.6"/>
+    </g>
+  </g>
+  <!-- the seed: one small cool thing -->
+  <circle cx="16" cy="4.6" r="1.7" fill="#3dd0a0"/>
+  <!-- the bloom: enormous warm consequences -->
+  <g fill="#ff7a34">
+    <circle cx="6.6" cy="26.8" r="1.7"/>
+    <circle cx="12.5" cy="26.2" r="1.4"/>
+    <circle cx="19.5" cy="26.2" r="1.4"/>
+    <circle cx="25.4" cy="26.8" r="1.7"/>
+  </g>
+  <g fill="#fff1c2">
+    <circle cx="6.6" cy="26.8" r="0.7"/>
+    <circle cx="25.4" cy="26.8" r="0.7"/>
+  </g>
 </svg>
