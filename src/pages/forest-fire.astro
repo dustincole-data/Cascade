@@ -1,7 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CaptionStrip from '../components/CaptionStrip.astro';
+import ControlBar from '../components/ControlBar.astro';
 import Instrument from '../components/Instrument.astro';
+import SignaturePlot from '../components/SignaturePlot.astro';
+
+const startD = 0.4;
 ---
 
 <BaseLayout
@@ -11,8 +15,25 @@ import Instrument from '../components/Instrument.astro';
   <section class="page">
     <p class="kicker">Cascade · 01</p>
     <CaptionStrip />
-    <Instrument title="Forest fire" sci="percolation · von-Neumann spread" startD={0.4} showCurve={false} />
-    <p class="handoff"><a href="/synthesis">next: what you just felt, named →</a></p>
+    <Instrument
+      title="Forest fire"
+      sci="percolation · von-Neumann spread"
+      stageLabel="Forest stage. Click a tree, or press Enter, to spark it."
+    >
+      <SignaturePlot
+        slot="plot"
+        id="plot"
+        mode="exhibit"
+        width={460}
+        height={430}
+        showCurve={false}
+        showScatter={false}
+        markerD={startD}
+        annotation={{ title: 'd_c ≈ 0.59', sub: ['the same spark', 'now takes everything'] }}
+      />
+      <ControlBar slot="controls" startD={startD} />
+    </Instrument>
+    <p class="handoff"><a href="/sandpile">next: criticality →</a></p>
   </section>
 </BaseLayout>
 

@@ -10,7 +10,11 @@ Plan being executed: [2026-07-24-cascade-forest-fire-build.md](.claude/plans/202
 - [x] **Phase 2 — Exhibit 1 end-to-end.** Percolation core (tested), canvas stage, live signature plot, 3-beat on-ramp, free sandbox. §4.5 acceptance met and verified in-browser at every step.
 - [x] **Phase 3 — Landing + synthesis coda.** Landing frames the thesis with one live door; `/synthesis` panel 1 built as a board-slot.
 - [x] **Phase 4 — Ship** (2026-07-24). Repo [`dustincole-data/Cascade`](https://github.com/dustincole-data/Cascade) public, all commits pushed; Vercel project `cascade` **GitHub-connected** (a push to `main` builds automatically — proven, 15s build); DNS added at Namecheap and **live at [cascade.dustincoledata.com](https://cascade.dustincoledata.com)** (verified: `200`, title `Cascade — one small thing, enormous consequences`). Brand card live on [dustincoledata.com/projects](https://dustincoledata.com/projects).
-- [ ] **Phase 5 — Graduate exhibits 2 & 3** (sandpile, then network) as new rule-sets on the proven shell. Not started — **exhibit 2's instrument is now designed** (🔒 [ticket 04](.scratch/cascade/issues/04-sandpile-instrument.md); spec §5.1). Its on-ramp ([ticket 05](.scratch/cascade/issues/05-sandpile-on-ramp.md)) is the open frontier, so build follows that.
+- [~] **Phase 5 — Graduate exhibits 2 & 3.** **Exhibit 2 (sandpile) is BUILT** (2026-07-24) from 🔒 tickets [04](.scratch/cascade/issues/04-sandpile-instrument.md) · [05](.scratch/cascade/issues/05-sandpile-on-ramp.md) · [06](.scratch/cascade/issues/06-coda-panel-2.md) — instrument, 3-beat on-ramp, sandbox, coda panel 2, the 2-up board and the landing's second door, all verified in-browser (evidence below). 89 tests green. Exhibit 3 (network) is what remains.
+
+---
+
+# Exhibit 1 — forest fire (Phases 1–4, 2026-07-23/24)
 
 ## Acceptance evidence (§4.5, verified live — not assumed)
 
@@ -47,17 +51,75 @@ Plan being executed: [2026-07-24-cascade-forest-fire-build.md](.claude/plans/202
 - Lesson dwell raised 900 ms → 2400 ms; the payoff line was being wiped before it could be read.
 - A real but tiny burn displayed a flat `0%`; it now reads `<1%`, which is beat 1's entire point.
 
+---
+
+# Exhibit 2 — sandpile (Phase 5, 2026-07-24)
+
+## Acceptance evidence (🔒 tickets 04 · 05 · 06 — walked live, not assumed)
+
+| Requirement | Result |
+|---|---|
+| A dial the user cannot touch climbs to a number they did not choose, and parks | Walked from an empty table: `0.00 → 0.10 → 1.67 → parks 2.10` over ~12s, 15,001 grains. The dial is `aria-hidden`, not in the tab order (bar tabbables: Drop · Feed · speed · Shuffle · Reset). |
+| Feeding harder does not move the parked slope | Beat 2 at max speed: **+3,140 grains, slope 2.10 → 2.11** (drift 0.01 < the 0.02 gate). The refusal is legible without the caption — `grains` races, `slope` sits on its tick. |
+| The same grain: nothing, then everything | `1 grain → 0 cells` in beat 1; **`1 grain → 1,378 cells`** (34% of the field) on the ring drop. Left side of the arrow never changed. |
+| Beat 3 is the session's first *animated* avalanche, and the plot's first point lands with it | Confirmed: weather (charge + feed) plots nothing; the ring drop animates a white-hot front and drops the first point far out on the right tail, on the backbone's tail, annotation resolving off the line. |
+| An off-ring drop is honoured | Yes — a real computed outcome (measured `27 cells`, and `0 cells` where the cell absorbs), readout updates, beat stays open, ring keeps pulsing. |
+| The survival curve reads straight and builds from the user's own play | Straight run over two decades, τ ≈ 1.28 measured on the baked artifact; the user's series accumulates drop by drop under the backbone with the annotation riding their own max. |
+| Skip / return / Reset always leave a **charged** pile | Skip → `2.10`, 15,000 grains, sandbox open. Return → same + `▷ replay intro`. Reset → recharged in **925 ms**, dial visibly climbing. Never a dead flat table. |
+| 60fps | Batched charge: **median 16.7 ms/frame, p95 16.8 ms**. Animated avalanche: **median 16.7, p95 16.8, max 16.8** (n=57). One drop blocks 1.6 ms; the Reset handler 4.2 ms. |
+| Keyboard | Arrows move a visible focus cell, Enter drops there (`grains 15,000 → 15,001`, `13 cells`); entering beat 3 moves the focus cell onto the ring, so Enter completes the beat. |
+| Reduced motion | Avalanches resolve as an immediate before/after swap; outcome carried by the readout + the new plot point (6 drops → 4 plot points, `biggest 66`, no errors). |
+| No-JS | `/sandpile` renders the baked backbone, the sci line and the source line. `/synthesis` renders **2 panels, 2 curves, 2 annotations, 2 source lines, the seam line** and hides the drag hints. |
+| The same drag, opposite outcomes (the board's whole point) | Panel 1: `4% → 28% → 63% burned`, marker flips at d_c. Panel 2: `1 in 2 → 1 in 6 → 1 in 27 → 1 in 868` drops, marker warms `rgb(26,102,78) → rgb(226,205,106)` continuously and **never flips**. |
+| The board widens, then stacks at hero scale | Plots re-lay-out (not scale): **510 px** each at n=2 ≥1100px, **860×499** stacked at 1000px, **300** on a phone. No horizontal overflow at 390 / 768 / 1000 / 1440. |
+| Every coda number is read off the baked data | Rarity interpolates the baked survival series in log space; `★ your biggest` reads `cascade.sp.biggest` (wrote `1,378` live) and is absent-safe. |
+
+## Deviations from the locked tickets (deliberate — flagged, not silent)
+
+1. **Avalanche size is AREA (distinct cells toppled), not topple events.** Ticket 04's illustrative "6,140" implies topple events, but every *locked* quantity is an area: the readout's noun (`N cells`), the annotation's exponent (τ ≈ 1.1–1.3 is BTW's **area** exponent; the size exponent is ≈1.2–1.3), ticket 05's "a quarter of the field", and ticket 06's "≥ 900 cells". Area also keeps the readout honest — a 64² table cannot move 6,140 cells. `topples` is still computed; only the front animation uses it.
+2. **The annotation prints τ ≈ 1.3, not the locked τ ≈ 1.1.** It is derived from the baked run (`meta.tau` = 1.28, fitted log-spaced over the scaling region s ≤ 300) rather than authored, per ticket 06 D8. 1.1 would contradict the line the user is looking at. It stays inside the cited "τ ≈ 1.1–1.3 (approx.)", and a test fails if the bake ever drifts out of that range.
+3. **The source line names the field: "… · 64² field · τ ≈ 1.1–1.3 (approx.)".** The far tail steepens because a finite table runs out of cells, not because avalanches have a typical size; the method line is where that belongs.
+4. **▷ Feed is a toggle, not hold-to-press.** Ticket 05 fork 3 says "hold the feed"; a toggle satisfies the same gate, matches the shell's existing Play/Pause vocabulary, and is the only version a keyboard user can perform.
+5. **The survival plot is a second component** (`SurvivalPlot.astro`) sharing the locked `.sp-*` treatment, geometry helpers and palette — rather than a sixth branch inside `SignaturePlot.astro`. Same visual system, two disjoint element sets.
+6. **Panel 2's rarity readout parks top-right** instead of riding its marker like panel 1's. Riding it collided with the annotation the panel exists to make; top-right is the one region a descending survival curve always leaves empty.
+7. **Board plots are ~510 px at n=2, not ~560.** The locked container (1280) minus page and panel padding lands there. Same layout, ~9% smaller.
+
+## Numbers measured while building (the design constants)
+
+- **The charge:** 15,000 grains — the locked copy's "fifteen thousand" is also what it takes. The pile crosses 2.10 at ~9,000 and the remaining ~6,000 pour in with the needle dead still, which pre-figures beat 2.
+- **Ring cell:** found at runtime (~97 ms, only cells at 3 grains can start anything), because beat 1 lets the user put their own first grain down — one grain at criticality genuinely changes which cell is the monster, so a baked answer would sometimes be a dud. Measured payoffs: **1,221–1,378 cells (30–34% of the field)**.
+- **Baked law:** 500,000 drops after the charge → 217,707 avalanches, max area 3,781, τ ≈ 1.28. Ships as 1.7 KB of JSON; the exhibit's backbone and the coda's hero line read the same artifact.
+- **Rarity anchors** (off that artifact): ≥100 cells = 1 in 7 drops · ≥912 = 1 in 25 · ≥2,650 = 1 in 529.
+- **Marker travel stops at 2,811 cells** — where the plotted curve leaves the frame. Past it the readout would be quoting the bake's own sample size ("1 in 500,000") and the dot would sit below the plot area.
+
+## Defects found by walking it live (all fixed)
+
+- `[hidden]` lost to `button.ctl-btn{display:inline-flex}` and `.readout .r{display:flex}`, so **every control the on-ramp gates out still showed**. Now `[hidden]{display:none!important}`.
+- The ring pointed at the **wrong cell**: `cellRect` is canvas-relative, but a square table is centred in a landscape panel, so the canvas is inset ~35 px. Overlays now add `canvas.offsetLeft/Top`. (Caught because the payoff drop returned 27 cells instead of ~1,300.)
+- `.instrument[data-phase] .panels{grid-template-columns:1.15fr 1fr}` outranked the 860 px collapse rule, so **on a phone the plot was squeezed to 8 px wide**. Now scoped to `min-width: 861px`.
+- Panel 2's leader anchored on `sizes.indexOf(200)` — a size that isn't in the baked series — and fell back to index 0, so the leader shot past the curve to the top-right. It now interpolates the curve at s = 50 (inside the fitted scaling run), and the client re-lays the annotation out on every resize.
+- The rarity readout took its colour from the ramp's cool end and was **unreadable on the dark ground**; it now warms from a legible floor (t ≥ 0.42) — still continuous, still never flipping.
+- Dragging a marker **sweep-selected the plot's labels**; `user-select: none` on `.sigplot`.
+- A square 64² stage at full panel width made a ~950 px-tall instrument. The renderer now fits a grid to a height cap (510) and centres it, and the sandpile's panels run 1.15fr / 1fr.
+- The keyboard focus cell appeared after a **mouse** click; it now requires `:focus-visible`.
+- `1 grain → N cells` un-greyed the moment the charge ended. It now stays greyed until a single grain actually owns an outcome.
+
+## Engine debts exhibit 2 collected (🔒 ticket 04 D9 · ticket 05 D11) — all paid
+
+- **The stage generalised.** [`stage.ts`](src/scripts/stage.ts) no longer knows about fire: an exhibit supplies `bg(i)` for a cell at rest and the cells in the front, and `paintFront`/`paintCells` serve a burning front and a toppling avalanche identically (halo sprites, `lighter` composite and the locked bloom values unchanged). Fire re-verified end-to-end afterwards.
+- **The beat runner extracted.** [`beat-runner.ts`](src/scripts/beat-runner.ts) owns the caption strip, the progress dots, the skip rail and the settle-once/timer-scoping discipline — the machinery every on-ramp defect in the fire slice lived in. Exhibit 2 inherited the fixes; fire's on-ramp was re-walked beat by beat to prove it.
+- **Log scales are real.** `logAxis` / `linearAxis` / `decadeTicks` / `interpLog` in [`plot-geometry.ts`](src/lib/plot-geometry.ts), and [`plot-layout.ts`](src/lib/plot-layout.ts) now holds the geometry both the SSR components and their client modules use — which is what lets a plot **re-lay-out** at a new width instead of being a fixed canvas the viewBox shrinks.
+- **The instrument frame took slots.** [`Instrument.astro`](src/components/Instrument.astro) supplies the locked chrome; each exhibit fills the plot, controls and overlay slots. No per-exhibit chrome was invented.
+- **`src/lib/types.ts` was left alone.** It is unreferenced — the fire-shaped `Params`/`Stats`/`StepResult` names are documentation of a shape nothing imports, so generalising them would have been churn. Flagged as pre-existing dead code, not deleted.
+
 ## Open
 
-- Nothing blocking. Next work is Phase 5, gated on the sandpile on-ramp design ([ticket 05](.scratch/cascade/issues/05-sandpile-on-ramp.md)).
+- Nothing blocking. Next work is **exhibit 3 (network)** plus coda panel 3 / the 3-up board — the board is already a step in a locked rule (`data-panels` drives the container width and the column count), so panel 3 mostly needs its own re-feel and annotated feature.
+- The returning-visitor path runs the 15,000-grain charge synchronously (~0.4 s of blocked main thread during hydration). Fine today; if it ever reads as a stall, chunk it across a few frames.
 
-## Engine debts exhibit 2 will collect (🔒 ticket 04)
+---
 
-The forest-fire slice was built as one exhibit, so the shell is fire-shaped in three places. The sandpile is what forces each one open — budget for them in Phase 5, they are not surprises.
-
-- `Params.value` / `Stats` / `StepResult` in [`src/lib/types.ts`](src/lib/types.ts) name fire concepts (`density`, `trees`, `burned`, `frac`, `ignited`, `spent`). The sandpile needs a slope, a grain count, and an avalanche size.
-- [`plot-geometry.ts`](src/lib/plot-geometry.ts) is linear-only; the survival curve needs **log scales** on both axes.
-- The control bar assumes the parameter slot is a *user* control. The sandpile's slope dial is read-only and deliberately non-focusable.
+# Reference
 
 ## DNS pattern (recorded — done, not pending)
 

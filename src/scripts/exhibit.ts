@@ -1,15 +1,19 @@
 import {
   buildField,
   burn,
+  isTree,
   largestClusterMask,
   largestClusterSpark,
-  nearestTree,
   nearestTreeWhere,
   type Burn,
   type Field,
 } from '../lib/forest-fire.ts';
+import { SCAR, TEAL, lerpStops, type RGB } from '../lib/palette.ts';
 import { attachPlot, type PlotHandle } from './plot.ts';
-import { createStage, type Stage } from './stage.ts';
+import { bandFor, createStage, type Stage } from './stage.ts';
+
+/** The forest dims so the burning front keeps its contrast (locked look, ticket 01). */
+const FOREST_DIM = 0.52;
 
 export interface ExhibitOpts {
   grid: { W: number; H: number };
@@ -46,15 +50,32 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
   const seedVal = root.querySelector<HTMLElement>('.seedval')!;
   const playBtn = root.querySelector<HTMLButtonElement>('[data-act=play]')!;
 
-  const stage: Stage = createStage(canvas, W, H);
-  const plot: PlotHandle = attachPlot(svg);
-
   let seed = opts.seed;
   let field: Field = buildField(W, H, seed);
   let density = opts.startD;
   let sparkCell = -1;
   let result: Burn | null = null;
   let tick = 0;
+
+  /**
+   * The resting colour of a cell: latent forest, or charcoal scar once the front
+   * has passed over it. Cells inside the glowing band get their scar painted here
+   * too and `paintFront` overdraws them — without that they would be holes in any
+   * frame the front doesn't cover (idle, tab-restore, resize).
+   */
+  function cellBg(i: number): RGB | null {
+    if (!isTree(field, i, density)) return null;
+    const t = result ? result.ig[i]! : -1;
+    if (t < 0 || t > tick) {
+      const c = lerpStops(TEAL, field.shade[i]!);
+      return [c[0] * FOREST_DIM, c[1] * FOREST_DIM, c[2] * FOREST_DIM];
+    }
+    const g = 0.72 + 0.5 * field.shade[i]!;
+    return [SCAR[0] * g, SCAR[1] * g, SCAR[2] * g];
+  }
+
+  const stage: Stage = createStage(canvas, { W, H, bg: cellBg });
+  const plot: PlotHandle = attachPlot(svg);
   let raf = 0;
   let playing = false;
   const trialCbs: ((d: number, frac: number) => void)[] = [];
@@ -95,19 +116,19 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     }
     result = burn(field, density, sparkCell);
     tick = 0;
-    stage.paintAll(field, density, result, 0);
+    stage.paintAll();
 
     if (result.spark < 0) {
       sweptVal.textContent = '—';
       return;
     }
 
-    const band = stage.bandFor(result);
+    const band = bandFor(result.maxTick);
 
     if (REDUCED) {
       // Before/after state: paint the finished burn, no animated spread.
       tick = result.maxTick + band;
-      stage.paintAll(field, density, result, tick);
+      stage.paintAll();
       finish();
       return;
     }
@@ -120,23 +141,35 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
         acc -= 1;
         tick++;
         const spent = result!.buckets[tick - band];
-        if (spent) stage.ageOut(spent, field);
+        if (spent) stage.paintCells(spent); // aged out of the band → permanent scar in the cache
       }
       if (tick <= result!.maxTick + band) {
-        stage.paintFrame(field, result!, tick, performance.now());
+        stage.paintFront(frontCells(result!, band), (i) => frontAge(result!, i, band), performance.now());
         raf = requestAnimationFrame(step);
       } else {
-        stage.paintAll(field, density, result!, tick);
+        stage.paintAll();
         finish();
       }
     };
     raf = requestAnimationFrame(step);
   }
 
+  /** The cells still glowing: everything ignited within `band` ticks of now. */
+  function frontCells(b: Burn, band: number): number[] {
+    const front: number[] = [];
+    for (let t = Math.max(0, tick - band + 1); t <= Math.min(tick, b.maxTick); t++) {
+      const bucket = b.buckets[t];
+      if (bucket) front.push(...bucket);
+    }
+    return front;
+  }
+
+  const frontAge = (b: Burn, i: number, band: number) => Math.max(0, Math.min(1, (tick - b.ig[i]!) / band));
+
   function repaintIdle() {
     stopLoop();
     result = null;
-    stage.paintAll(field, density, null, 0);
+    stage.paintAll();
     sweptVal.textContent = '—';
   }
 
@@ -219,17 +252,23 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     }
     // Coming back: the loop was cut mid-burn, so repaint the current state
     // rather than leaving whatever half-frame was on screen.
-    stage.paintAll(field, density, result, tick);
-    if (result && result.spark >= 0) stage.paintFrame(field, result, tick, 0);
+    repaintCurrent();
   });
+
+  function repaintCurrent() {
+    stage.paintAll();
+    if (result && result.spark >= 0) {
+      const band = bandFor(result.maxTick);
+      stage.paintFront(frontCells(result, band), (i) => frontAge(result!, i, band), 0);
+    }
+  }
 
   let rt = 0;
   addEventListener('resize', () => {
     clearTimeout(rt);
     rt = window.setTimeout(() => {
       stage.resize(canvas.parentElement!.getBoundingClientRect().width);
-      stage.paintAll(field, density, result, tick);
-      if (result) stage.paintFrame(field, result, tick, 0);
+      repaintCurrent();
     }, 120);
   });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lerpStops, fireColor, FIRE, TEAL, SCAR, rgbStr } from './palette';
+import { lerpStops, fireColor, heightColor, luminance, FIRE, TEAL, SCAR, rgbStr } from './palette';
 
 describe('palette ramps', () => {
   it('anchors the fire ramp on the locked hexes', () => {
@@ -24,6 +24,14 @@ describe('palette ramps', () => {
 
   it('the scar is near-black', () => {
     expect(Math.max(...SCAR)).toBeLessThan(60);
+  });
+
+  it('the sandpile height ramp runs cool→warm with monotone luminance (CVD-safe)', () => {
+    const lums = [0, 1, 2, 3].map((h) => luminance(heightColor(h)));
+    for (let i = 1; i < lums.length; i++) expect(lums[i]!).toBeGreaterThan(lums[i - 1]!);
+    expect(heightColor(3).map(Math.round)).toEqual([255, 209, 102]); // #ffd166 — one grain from toppling
+    const empty = heightColor(0);
+    expect(empty[0]).toBeLessThan(empty[1]!); // still on the cool pole
   });
 
   it('rgbStr formats integers', () => {

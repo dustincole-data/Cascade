@@ -1,0 +1,145 @@
+---
+/**
+ * The sandpile's signature plot — a log-log survival curve (🔒 ticket 04, fork 5).
+ * Two configs off one artifact (🔒 ticket 06): `live` is the exhibit's, where the
+ * user's own avalanches build over a faint baked backbone; `coda` is panel 2's,
+ * where the baked law IS the hero line, drawn with one continuous cool→warm ramp
+ * and NO regime boundary — the missing edge is the point.
+ *
+ * Same locked §4.4 treatment as the fire plot: faint gridlines, annotation off
+ * the line with a thin leader, JetBrains mono axes, a source line. Panel 2 alone
+ * has no hot-core dot: it has no critical point to mark, and that absence is the
+ * inversion (🔒 ticket 06, fork 4).
+ */
+import surv from '../data/sandpile-survival.json';
+import { decadeTicks, interpLog } from '../lib/plot-geometry';
+import {
+  SP_ANNO_S,
+  SP_FLOOR_DROPS,
+  codaHeight,
+  codaMargins,
+  makeFrame,
+  oneIn,
+  spDomain,
+  survivalPath,
+} from '../lib/plot-layout';
+import { HEIGHT, lerpStops, rgbStr } from '../lib/palette';
+
+interface Props {
+  id: string;
+  kind: 'live' | 'coda';
+  width: number;
+  height?: number;
+  /** The exhibit withholds the annotation until the first avalanche is plotted. */
+  showSignature?: boolean;
+  annotation: { title: string; sub?: string[] };
+}
+const { id, kind, width, height, showSignature = true, annotation } = Astro.props;
+
+const coda = kind === 'coda';
+const m = coda ? codaMargins(width) : { l: 46, r: 22, t: 26, b: 44 };
+const h = height ?? codaHeight(width);
+const dom = spDomain(kind);
+const f = makeFrame(width, h, m, dom);
+const { sizes, p, meta } = surv;
+
+/** The exhibit's backbone is the law scaled to a drop count; the coda's is the law itself. */
+const ys = coda ? p : p.map((v) => v * SP_FLOOR_DROPS);
+const path = survivalPath(sizes, ys, f, dom.yMin);
+
+const xTicks = decadeTicks(dom.xMin, dom.xMax);
+const yTicks = decadeTicks(dom.yMin, dom.yMax);
+const yLabel = (v: number) => String(Math.round(coda ? 1 / v : v));
+
+/** Panel 2's annotation marks the straightness ITSELF — a thin leader touching
+ *  mid-run, the label in the empty triangle beneath it, and no hot-core dot: it
+ *  has no critical point to mark, and that absence is the inversion. */
+const anchorS = coda ? SP_ANNO_S : sizes[sizes.length - 1]!;
+const ax = f.x.px(anchorS);
+const ay = coda ? f.y.px(interpLog(sizes, p, anchorS)) : f.y.px(1);
+const lx = coda ? f.x.px(SP_ANNO_S / 8) : Math.max(f.m.l + 4, ax - f.pw * 0.42);
+const ly = coda ? Math.min(f.m.t + f.ph - 26, ay + 86) : Math.max(f.m.t + 16, ay - 54);
+
+const ramp = [0, 0.25, 0.5, 0.75, 1].map((t) => ({ t, c: rgbStr(lerpStops(HEIGHT, t)) }));
+const aria = coda
+  ? `How often an avalanche is at least a given size, on log axes. The line falls in a straight run across three orders of magnitude with no break and no bump: there is no typical size.`
+  : `Your avalanches, biggest first, on log axes, over the faint shape a long run converges to.`;
+---
+
+<svg
+  id={id}
+  class:list={['sigplot', 'survplot', `sigplot--${coda ? 'coda' : 'exhibit'}`]}
+  viewBox={`0 0 ${width} ${h}`}
+  width={width}
+  height={h}
+  role="img"
+  aria-label={aria}
+  data-kind={kind}
+  data-m={JSON.stringify(m)}
+  data-sizes={JSON.stringify(sizes)}
+  data-p={JSON.stringify(p)}
+  data-tau={meta.tau}
+>
+  <defs>
+    <!-- One continuous cool→warm ramp along the line. No boundary anywhere
+         (🔒 ticket 06, fork 8) — it is exhibit 2's own stage height ramp. -->
+    <linearGradient id={`${id}-ramp`} x1={m.l} y1="0" x2={m.l + f.pw} y2="0" gradientUnits="userSpaceOnUse">
+      {ramp.map((s) => <stop offset={s.t} stop-color={s.c} />)}
+    </linearGradient>
+  </defs>
+
+  <g class="sp-grid">
+    {xTicks.map((v) => <line data-gx={v} x1={f.x.px(v)} y1={m.t} x2={f.x.px(v)} y2={m.t + f.ph} />)}
+    {yTicks.map((v) => <line data-gy={v} x1={m.l} y1={f.y.px(v)} x2={m.l + f.pw} y2={f.y.px(v)} />)}
+  </g>
+
+  <g class="sp-axis">
+    {
+      xTicks.map((v) => (
+        <text data-gx={v} x={f.x.px(v)} y={m.t + f.ph + 16} text-anchor="middle">
+          {v >= 1000 ? `${v / 1000}k` : v}
+        </text>
+      ))
+    }
+    {
+      yTicks.map((v) => (
+        <text data-gy={v} x={m.l - 8} y={f.y.px(v) + 3.5} text-anchor="end">
+          {yLabel(v)}
+        </text>
+      ))
+    }
+    <text class="sp-axis-title sp-xtitle" x={m.l + f.pw / 2} y={h - 6} text-anchor="middle"
+      >avalanche size — cells toppled →</text
+    >
+    <text
+      class="sp-axis-title sp-ytitle"
+      transform={`translate(13 ${m.t + f.ph / 2}) rotate(-90)`}
+      text-anchor="middle">{coda ? '1 in N drops' : 'avalanches at least this big'}</text
+    >
+  </g>
+
+  <path class:list={['sp-backbone', { 'sp-curve': coda }]} d={path} stroke={`url(#${id}-ramp)`}></path>
+
+  {!coda && <g class="sp-user"><path class="sp-user-line" d=""></path></g>}
+
+  <g class="sp-signature" data-hidden={showSignature ? 'false' : 'true'}>
+    {!coda && <circle class="sp-knee-dot sp-max-dot" cx="-99" cy="-99" r="3.4"></circle>}
+    <line class="sp-leader" x1={ax} y1={ay + 8} x2={lx + (coda ? 26 : 60)} y2={ly - 9}></line>
+    <text class="sp-anno-title" x={lx} y={ly}>{annotation.title}</text>
+    {(annotation.sub ?? []).map((line, i) => <text class="sp-anno-sub" x={lx} y={ly + 15 + i * 13}>{line}</text>)}
+  </g>
+
+  {
+    coda && (
+      <g class="sp-marker sp-marker--warm">
+        <line class="sp-marker-line" x1={f.m.l} y1={m.t} x2={f.m.l} y2={m.t + f.ph} />
+        <circle class="sp-marker-dot" cx={f.m.l} cy={f.y.px(p[0]!)} r="4" />
+        <text class="sp-rarity" x={f.m.l + 10} y={m.t + 14}>{`1 in ${oneIn(p[0]!)} drops ≥ ${sizes[0]} cell`}</text>
+      </g>
+    )
+  }
+
+  {coda && <text class="sp-star" data-hidden="true" x="-99" y="-99">★</text>}
+
+  <text class="sp-source" x={m.l} y={m.t - 12}>{meta.source}</text>
+</svg>

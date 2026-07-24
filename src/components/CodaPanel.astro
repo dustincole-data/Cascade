@@ -1,30 +1,24 @@
 ---
-import SignaturePlot from './SignaturePlot.astro';
-
+/**
+ * One board slot (🔒 ticket 03): concept word · hero plot (its real shape, ONE
+ * critical feature annotated off the line) · plain line · felt callback ·
+ * real-world echo — plus one restrained re-feel. The rhyme lives in identical
+ * framing, annotation and colour, never in forcing the shapes to match.
+ */
 interface Props {
   concept: string;
+  hint: string;
   plain: string;
   felt: string;
   echo: string;
 }
-const { concept, plain, felt, echo } = Astro.props;
+const { concept, hint, plain, felt, echo } = Astro.props;
 ---
 
 <article class="coda-panel">
   <p class="coda-concept">{concept}</p>
-  <div class="coda-plot">
-    <SignaturePlot
-      id="coda-plot"
-      mode="coda"
-      width={860}
-      height={500}
-      showCurve={true}
-      showScatter={true}
-      markerD={0.55}
-      annotation={{ title: 'threshold · d_c ≈ 0.59' }}
-    />
-  </div>
-  <p class="coda-hint" data-js-only>drag the marker across the knee</p>
+  <div class="coda-plot"><slot name="plot" /></div>
+  <p class="coda-hint" data-js-only>{hint}</p>
   <p class="coda-plain">{plain}</p>
   <p class="coda-felt">{felt}</p>
   <p class="coda-echo">{echo}</p>

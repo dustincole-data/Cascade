@@ -1,26 +1,66 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CodaPanel from '../components/CodaPanel.astro';
+import SignaturePlot from '../components/SignaturePlot.astro';
+import SurvivalPlot from '../components/SurvivalPlot.astro';
+import surv from '../data/sandpile-survival.json';
+
+/** Board scale at n=2 (🔒 ticket 06, fork 5): container ~1280, plots ~560.
+ *  Below 1100px the board stacks and the client re-lays each plot out at hero
+ *  scale — the plots take the width of the slot they land in. */
+const PLOT_W = 560;
+const PANELS = 2;
 ---
 
 <BaseLayout
   title="Synthesis · Cascade"
   description="One small thing, enormous consequences — three ways the world does it."
 >
-  <section class="page coda">
+  <section class="page coda" data-panels={PANELS}>
     <p class="kicker">Cascade · synthesis</p>
     <h1>One small thing, enormous consequences — three ways the world does it.</h1>
 
-    <div class="coda-board" data-panels="1">
+    <div class="coda-board" data-panels={PANELS}>
       <CodaPanel
         concept="THRESHOLD"
+        hint="drag the marker across the knee"
         plain="Cross a line and the same spark changes everything."
         felt="Cliffs, not ramps."
         echo="An epidemic past R = 1."
-      />
+      >
+        <SignaturePlot
+          slot="plot"
+          id="coda-plot"
+          mode="coda"
+          width={PLOT_W}
+          showCurve={true}
+          showScatter={true}
+          markerD={0.55}
+          annotation={{ title: 'threshold · d_c ≈ 0.59' }}
+        />
+      </CodaPanel>
+
+      <CodaPanel
+        concept="CRITICALITY"
+        hint="drag the marker out along the tail"
+        plain="Systems drift to their own edge and stay there."
+        felt="Nobody set the dial."
+        echo="An idea going viral."
+      >
+        <SurvivalPlot
+          slot="plot"
+          id="coda-survival"
+          kind="coda"
+          width={PLOT_W}
+          annotation={{ title: `no typical size · τ ≈ ${surv.meta.tau.toFixed(1)}` }}
+        />
+      </CodaPanel>
     </div>
 
-    <p class="promise">criticality and cascade — the next two exhibits.</p>
+    <!-- The trio's intelligence, named ONCE and at board level, so every panel
+         stays standalone (🔒 ticket 06, forks 6 + 7). -->
+    <p class="coda-seam">One edge you cross. One a system finds by itself.</p>
+    <p class="promise">cascade — the last exhibit.</p>
   </section>
 </BaseLayout>
 

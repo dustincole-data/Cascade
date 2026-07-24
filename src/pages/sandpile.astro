@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CaptionStrip from '../components/CaptionStrip.astro';
+import Instrument from '../components/Instrument.astro';
+import PileControls from '../components/PileControls.astro';
+import SurvivalPlot from '../components/SurvivalPlot.astro';
+import surv from '../data/sandpile-survival.json';
+---
+
+<BaseLayout
+  title="Sandpile · Cascade"
+  description="Nobody set the dial. The pile loads itself to its own edge, and then one grain can move anything."
+>
+  <section class="page">
+    <p class="kicker">Cascade · 02</p>
+    <CaptionStrip />
+    <Instrument
+      title="Sandpile"
+      sci="self-organized criticality · Bak–Tang–Wiesenfeld"
+      stageLabel="Sandpile table. Click a cell, or press Enter, to drop one grain there."
+    >
+      <Fragment slot="overlay">
+        <span class="stage-ring" data-on="false"></span>
+        <span class="stage-cursor" data-on="false"></span>
+      </Fragment>
+      <SurvivalPlot
+        slot="plot"
+        id="plot"
+        kind="live"
+        width={460}
+        height={430}
+        showSignature={false}
+        annotation={{ title: `no typical size · τ ≈ ${surv.meta.tau.toFixed(1)}` }}
+      />
+      <PileControls slot="controls" />
+    </Instrument>
+    <p class="handoff"><a href="/synthesis">next: what you just felt, named →</a></p>
+  </section>
+</BaseLayout>
+
+<script>
+  import { createPileExhibit } from '../scripts/pile.ts';
+  import { runPileOnRamp, pileOnRampComplete } from '../scripts/pile-onramp.ts';
+  import { PILE_SANDBOX } from '../lib/pile-config.ts';
+
+  const root = document.getElementById('instrument');
+  const strip = document.getElementById('caption');
+
+  if (root && strip) {
+    const returning = pileOnRampComplete();
+    const ex = createPileExhibit(root, { seed: 0x0ca5cade });
+
+    if (returning) {
+      // Repeat visits open in the sandbox, already critical, with a quiet replay.
+      ex.setControls('sandbox');
+      ex.startCharge('instant');
+      strip.dataset.beat = 'sandbox';
+      strip.querySelector('.cap-lesson')!.textContent = '';
+      strip.querySelector('.cap-prompt')!.textContent = PILE_SANDBOX.prompt;
+      (strip.querySelector('.cap-next') as HTMLButtonElement).hidden = true;
+      const replay = strip.querySelector('.cap-skip') as HTMLButtonElement;
+      replay.textContent = '▷ replay intro';
+      replay.addEventListener('click', () => {
+        localStorage.removeItem('cascade.sp.onramp');
+        location.reload();
+      });
+    } else {
+      runPileOnRamp(root, ex, strip);
+    }
+  }
+</script>

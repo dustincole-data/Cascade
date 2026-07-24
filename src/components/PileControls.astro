@@ -1,0 +1,43 @@
+---
+/**
+ * The sandpile's control bar (🔒 ticket 04, D1). Same chrome vocabulary as the
+ * fire bar — but the parameter slot holds a dial that turns ITSELF: read-only, no
+ * handle, no groove, not focusable, `aria-hidden` with its value mirrored into the
+ * readout region. Un-touchability is the meaning; a focus ring would promise
+ * otherwise. The sandpile has no user-owned parameter.
+ */
+import { CRITICAL_SLOPE } from '../lib/sandpile';
+
+const DIAL_MAX = 3;
+const tickPct = (CRITICAL_SLOPE / DIAL_MAX) * 100;
+---
+
+<div class="controls">
+  <div class="ctl" data-control="slope">
+    <label aria-hidden="true">slope</label>
+    <div class="dial" aria-hidden="true">
+      <span class="dial-fill" style="width:0%"></span>
+      <span class="dial-tick" style={`left:${tickPct}%`}></span>
+    </div>
+    <span class="val slopeval" aria-hidden="true">0.00</span>
+  </div>
+  <button class="ctl-btn drop" data-act="drop" type="button">● Drop</button>
+  <button class="ctl-btn" data-act="feed" data-control="feed" aria-pressed="false" hidden type="button"
+    >▷ Feed</button
+  >
+  <div class="ctl" data-control="speed" hidden>
+    <label for="speed">speed</label>
+    <input type="range" class="speed" id="speed" min="0.3" max="2" step="0.1" value="1" aria-label="feed speed" />
+  </div>
+  <button class="ctl-btn" data-act="shuffle" hidden type="button">⤫ Shuffle</button>
+  <button class="ctl-btn" data-act="reset" hidden type="button">↺ Reset</button>
+  <div class="spacer"></div>
+  <div class="readout">
+    <span class="sr-only" aria-live="off">slope <b class="slope-sr">0.00</b></span>
+    <span class="r">grains <b class="grainsval">0</b></span>
+    <span class="r pairing" data-weather="true" aria-live="polite"
+      >1 grain → <b class="cellsval">0 cells</b></span
+    >
+    <span class="r biggest" hidden>biggest <b class="biggestval">—</b></span>
+  </div>
+</div>

@@ -1,4 +1,5 @@
 import { D_C } from './forest-fire.ts';
+import type { BeatDef } from '../scripts/beat-runner.ts';
 
 export interface BeatState {
   d: number;
@@ -7,15 +8,10 @@ export interface BeatState {
   crossed: boolean;
 }
 
-export interface Beat {
+export interface Beat extends BeatDef<BeatState> {
   n: 1 | 2 | 3;
-  /** mono, shown before the action */
-  prompt: string;
-  /** Archivo, shown after the result lands */
-  lesson: string;
   spotlight: 'stage' | 'density';
   presetD: number;
-  done(s: BeatState): boolean;
 }
 
 /** Copy is LOCKED — ticket 02, decision 11. Do not rewrite. */

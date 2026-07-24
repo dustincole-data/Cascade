@@ -1,13 +1,14 @@
 ---
 import curveData from '../data/percolation-curve.json';
-import { makeScale, nearestIndex, type PlotBox } from '../lib/plot-geometry';
 import { D_C } from '../lib/forest-fire';
+import { nearestIndex } from '../lib/plot-geometry';
+import { codaHeight, codaMargins, makeFrame, scatterStride, type Domain } from '../lib/plot-layout';
 
 interface Props {
   id: string;
   mode: 'exhibit' | 'coda';
   width: number;
-  height: number;
+  height?: number;
   showCurve?: boolean; // the on-ramp withholds it until the beat-3 crossing
   showScatter?: boolean; // coda shows the canonical cloud; the exhibit builds its own
   markerD?: number;
@@ -18,23 +19,22 @@ const { id, mode, width, height, showCurve = true, showScatter = true, markerD, 
 
 const D_MIN = 0.3;
 const D_MAX = 0.86;
+const dom: Domain = { xMin: D_MIN, xMax: D_MAX, yMin: 0, yMax: 1 };
 // The coda's bottom margin carries three stacked rows — tick labels, the
 // `★ your run` memory tick, and the axis title — so it needs the extra room.
-// At 46 the star sat 8px off the axis title and collided with it.
-const m = mode === 'coda' ? { l: 56, r: 28, t: 34, b: 66 } : { l: 44, r: 20, t: 26, b: 38 };
-const box: PlotBox = { w: width, h: height, m };
-const s = makeScale(box, D_MIN, D_MAX);
-const pw = width - m.l - m.r;
-const ph = height - m.t - m.b;
+const m = mode === 'coda' ? codaMargins(width) : { l: 44, r: 20, t: 26, b: 38 };
+const h = height ?? codaHeight(width);
+const f = makeFrame(width, h, m, dom);
+const { pw, ph } = f;
 
 const { densities, meanS, scatter } = curveData;
 const curvePath = densities
-  .map((d, i) => `${i ? 'L' : 'M'}${s.x(d).toFixed(2)},${s.y(meanS[i]!).toFixed(2)}`)
+  .map((d, i) => `${i ? 'L' : 'M'}${f.x.px(d).toFixed(2)},${f.y.px(meanS[i]!).toFixed(2)}`)
   .join('');
 
 const ki = nearestIndex(densities, D_C);
-const kx = s.x(D_C);
-const ky = s.y(meanS[ki]!);
+const kx = f.x.px(D_C);
+const ky = f.y.px(meanS[ki]!);
 // The annotation lives in whitespace, never over the data: above-right of the knee.
 const lx = kx + 30;
 const ly = ky - 52;
@@ -42,22 +42,27 @@ const ly = ky - 52;
 const xTicks = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
 const yTicks = [0, 0.25, 0.5, 0.75, 1];
 const mk = markerD ?? D_MIN;
+/** At board scale the honest scatter thins, then drops, so the curve stays the
+ *  object (🔒 ticket 06, D10). The smoothed curve and annotation never drop. */
+const stride = mode === 'coda' ? scatterStride(width) : 1;
+const shownScatter = showScatter && stride > 0 ? scatter.filter((_, i) => i % stride === 0) : [];
 ---
 
 <svg
   id={id}
   class:list={['sigplot', `sigplot--${mode}`]}
-  viewBox={`0 0 ${width} ${height}`}
+  viewBox={`0 0 ${width} ${h}`}
   width={width}
-  height={height}
+  height={h}
   role="img"
   aria-label={`Fraction of the forest burned versus tree density. The curve is flat until density ${D_C.toFixed(2)}, then rises almost vertically to near total burn.`}
   data-dmin={D_MIN}
   data-dmax={D_MAX}
   data-dc={D_C}
+  data-m={JSON.stringify(m)}
   data-densities={JSON.stringify(densities)}
   data-curve={JSON.stringify(meanS)}
-  data-box={JSON.stringify(box)}
+  data-scatter={mode === 'coda' ? JSON.stringify(scatter) : '[]'}
 >
   <defs>
     <linearGradient id={`${id}-spectral`} x1={m.l} y1="0" x2={m.l + pw} y2="0" gradientUnits="userSpaceOnUse">
@@ -72,30 +77,36 @@ const mk = markerD ?? D_MIN;
   <rect class="sp-catastrophe" x={kx} y={m.t} width={m.l + pw - kx} height={ph} data-on="false"></rect>
 
   <g class="sp-grid">
-    {xTicks.map((d) => <line x1={s.x(d)} y1={m.t} x2={s.x(d)} y2={m.t + ph} />)}
-    {yTicks.map((f) => <line x1={m.l} y1={s.y(f)} x2={m.l + pw} y2={s.y(f)} />)}
+    {xTicks.map((d) => <line data-gx={d} x1={f.x.px(d)} y1={m.t} x2={f.x.px(d)} y2={m.t + ph} />)}
+    {yTicks.map((v) => <line data-gy={v} x1={m.l} y1={f.y.px(v)} x2={m.l + pw} y2={f.y.px(v)} />)}
   </g>
 
   <g class="sp-axis">
-    {xTicks.map((d) => <text x={s.x(d)} y={m.t + ph + 16} text-anchor="middle">{d.toFixed(1)}</text>)}
-    {yTicks.map((f) => <text x={m.l - 8} y={s.y(f) + 3.5} text-anchor="end">{Math.round(f * 100)}%</text>)}
-    <text class="sp-axis-title" x={m.l + pw / 2} y={height - 6} text-anchor="middle">density d →</text>
+    {
+      xTicks.map((d) => (
+        <text data-gx={d} x={f.x.px(d)} y={m.t + ph + 16} text-anchor="middle">
+          {d.toFixed(1)}
+        </text>
+      ))
+    }
+    {
+      yTicks.map((v) => (
+        <text data-gy={v} x={m.l - 8} y={f.y.px(v) + 3.5} text-anchor="end">
+          {Math.round(v * 100)}%
+        </text>
+      ))
+    }
+    <text class="sp-axis-title sp-xtitle" x={m.l + pw / 2} y={h - 6} text-anchor="middle">density d →</text>
     <text
-      class="sp-axis-title"
+      class="sp-axis-title sp-ytitle"
       transform={`translate(13 ${m.t + ph / 2}) rotate(-90)`}
       text-anchor="middle">fraction burned</text
     >
   </g>
 
-  {
-    showScatter && (
-      <g class="sp-scatter">
-        {scatter.map(([d, f]) => (
-          <circle cx={s.x(d!)} cy={s.y(f!)} r="1.7" />
-        ))}
-      </g>
-    )
-  }
+  <g class="sp-scatter">
+    {shownScatter.map(([d, v]) => <circle data-gx={d} data-gy={v} cx={f.x.px(d!)} cy={f.y.px(v!)} r="1.7" />)}
+  </g>
 
   <g class="sp-trials"></g>
 
@@ -109,9 +120,9 @@ const mk = markerD ?? D_MIN;
   </g>
 
   <g class="sp-marker" data-past="false">
-    <line class="sp-marker-line" x1={s.x(mk)} y1={m.t} x2={s.x(mk)} y2={m.t + ph}></line>
-    <circle class="sp-marker-dot" cx={s.x(mk)} cy={s.y(0)} r="3.4"></circle>
-    <text class="sp-readout" x={s.x(mk) + 8} y={m.t + 14}></text>
+    <line class="sp-marker-line" x1={f.x.px(mk)} y1={m.t} x2={f.x.px(mk)} y2={m.t + ph}></line>
+    <circle class="sp-marker-dot" cx={f.x.px(mk)} cy={f.y.px(0)} r="3.4"></circle>
+    <text class="sp-readout" x={f.x.px(mk) + 8} y={m.t + 14}></text>
   </g>
 
   <text class="sp-yourrun" x="0" y={m.t + ph + 30} data-hidden="true">★ your run</text>

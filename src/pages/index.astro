@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import surv from '../data/sandpile-survival.json';
 ---
 
 <BaseLayout
@@ -26,6 +27,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <span class="door-go">→</span>
     </a>
 
-    <p class="promise">criticality and cascade — the next two exhibits.</p>
+    <a class="door" href="/sandpile">
+      <span class="door-num">02</span>
+      <span class="door-body">
+        <span class="door-title">Sandpile</span>
+        <span class="door-line">
+          Nobody set this dial. The pile loads itself to its own edge — and then one grain can move
+          anything.
+        </span>
+        <span class="door-meta">criticality · Bak–Tang–Wiesenfeld · τ ≈ {surv.meta.tau.toFixed(1)}</span>
+      </span>
+      <span class="door-go">→</span>
+    </a>
+
+    <p class="promise">cascade — the last exhibit.</p>
   </section>
 </BaseLayout>
