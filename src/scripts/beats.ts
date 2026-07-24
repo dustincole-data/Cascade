@@ -5,8 +5,17 @@ import type { ExhibitHandle } from './exhibit.ts';
 const KEY_DONE = 'cascade.ff.onramp';
 const KEY_CROSSING = 'cascade.ff.crossing';
 
-/** Density whose spanning cluster the on-ramp's spark must join (see beat 3). */
-const SWEEP_D = 0.62;
+/**
+ * Density whose spanning cluster the on-ramp's spark must join (see beat 3).
+ *
+ * Must be a hair ABOVE d_c, not at the knee-tick's 0.62 target. The largest
+ * cluster at 0.62 is a different component from the one at 0.60, so a cell can
+ * belong to the former while still sitting in an isolated pocket the moment the
+ * user crosses — measured: one tap in five swept 1% at 0.595 with a 0.62 mask.
+ * Anchoring at 0.60 makes every tap sweep ~35% the instant they cross, rising
+ * to ~50% by 0.62. Monotonic fill guarantees the cell stays connected above it.
+ */
+const SWEEP_D = 0.6;
 
 /** How long the lesson line holds before auto-advancing. Long enough to read it —
  *  the lesson IS the beat's payoff, and advancing wipes it. */

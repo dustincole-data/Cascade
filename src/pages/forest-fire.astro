@@ -39,6 +39,8 @@ import Instrument from '../components/Instrument.astro';
       strip.dataset.beat = 'sandbox';
       strip.querySelector('.cap-lesson')!.textContent = '';
       strip.querySelector('.cap-prompt')!.textContent = SANDBOX_PROMPT;
+      // No on-ramp is running, so the beat rail would be a dead control.
+      (strip.querySelector('.cap-next') as HTMLButtonElement).hidden = true;
       const replay = strip.querySelector('.cap-skip') as HTMLButtonElement;
       replay.textContent = '▷ replay intro';
       replay.addEventListener('click', () => {

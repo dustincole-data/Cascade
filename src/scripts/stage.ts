@@ -61,7 +61,10 @@ export function createStage(canvas: HTMLCanvasElement, W: number, H: number): St
   }
 
   function resize(cssWidth: number) {
-    cell = Math.max(3, Math.floor(cssWidth / W));
+    // Fractional cell size so the grid fills its panel exactly. Flooring to an
+    // integer left a dead strip (up to 13% of the panel on narrow viewports),
+    // which reads as broken chrome; sub-pixel cell edges do not.
+    cell = Math.max(2, cssWidth / W);
     const w = W * cell;
     const h = H * cell;
     canvas.width = w * dpr;
