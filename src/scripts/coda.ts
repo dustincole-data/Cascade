@@ -1,6 +1,9 @@
+import netData from '../data/network-profile.json';
 import { KEY_PILE_BIGGEST } from '../lib/pile-config.ts';
+import { KEY_NET_WORST } from '../lib/net-config.ts';
 import { SP_X, codaWidth } from '../lib/plot-layout.ts';
 import { attachPlot } from './plot.ts';
+import { attachProfile } from './profile.ts';
 import { attachSurvival } from './survival.ts';
 
 const KEY_CROSSING = 'cascade.ff.crossing';
@@ -125,6 +128,43 @@ export function attachCoda(): void {
       apply: (width) => {
         plot.layout(width);
         set(s);
+      },
+    });
+  }
+
+  const netSvg = document.getElementById('coda-network') as SVGSVGElement | null;
+  if (netSvg) {
+    const plot = attachProfile(netSvg);
+    const n = plot.count();
+    let idx = 0; // rests at the left; no autoplay
+    // The ★ marks the needle the user's own worst node landed on. Storage is one
+    // fraction (🔒 ticket 07, D13), so find the node in the default profile whose
+    // blackout matches it — best-effort, never load-bearing.
+    const worstFrac = readNumber(KEY_NET_WORST);
+    if (worstFrac != null) {
+      const prof = netData.perNode[netData.alphas.indexOf(netData.defaultAlpha)]!;
+      let best = 0;
+      for (let i = 1; i < prof.length; i++) if (Math.abs(prof[i]! - worstFrac) < Math.abs(prof[best]! - worstFrac)) best = i;
+      plot.setStar(best);
+    }
+
+    const set = (next: number) => {
+      idx = Math.min(n - 1, Math.max(0, Math.round(next)));
+      plot.setMarker(idx);
+    };
+    netSvg.setAttribute('aria-valuemin', '1');
+    netSvg.setAttribute('aria-valuemax', String(n));
+    draggable(netSvg, {
+      label: 'Node marker. Move along the grid: the blackout size jumps with no pattern and no findable edge.',
+      move: (x) => set(plot.indexFromClientX(x)),
+      step: (dir) => set(dir === 'min' ? 0 : dir === 'max' ? n - 1 : idx + dir),
+    });
+    set(idx);
+    observed.push({
+      el: netSvg.closest('.coda-plot') as HTMLElement,
+      apply: (width) => {
+        plot.layout(width);
+        set(idx);
       },
     });
   }

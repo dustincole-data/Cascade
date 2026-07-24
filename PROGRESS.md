@@ -10,7 +10,7 @@ Plan being executed: [2026-07-24-cascade-forest-fire-build.md](.claude/plans/202
 - [x] **Phase 2 — Exhibit 1 end-to-end.** Percolation core (tested), canvas stage, live signature plot, 3-beat on-ramp, free sandbox. §4.5 acceptance met and verified in-browser at every step.
 - [x] **Phase 3 — Landing + synthesis coda.** Landing frames the thesis with one live door; `/synthesis` panel 1 built as a board-slot.
 - [x] **Phase 4 — Ship** (2026-07-24). Repo [`dustincole-data/Cascade`](https://github.com/dustincole-data/Cascade) public, all commits pushed; Vercel project `cascade` **GitHub-connected** (a push to `main` builds automatically — proven, 15s build); DNS added at Namecheap and **live at [cascade.dustincoledata.com](https://cascade.dustincoledata.com)** (verified: `200`, title `Cascade — one small thing, enormous consequences`). Brand card live on [dustincoledata.com/projects](https://dustincoledata.com/projects).
-- [~] **Phase 5 — Graduate exhibits 2 & 3.** **Exhibit 2 (sandpile) is BUILT** (2026-07-24) from 🔒 tickets [04](.scratch/cascade/issues/04-sandpile-instrument.md) · [05](.scratch/cascade/issues/05-sandpile-on-ramp.md) · [06](.scratch/cascade/issues/06-coda-panel-2.md) — instrument, 3-beat on-ramp, sandbox, coda panel 2, the 2-up board and the landing's second door, all verified in-browser (evidence below). 89 tests green. Exhibit 3 (network) is what remains.
+- [x] **Phase 5 — Graduate exhibits 2 & 3.** **Exhibit 2 (sandpile) BUILT** (2026-07-24) from 🔒 tickets [04](.scratch/cascade/issues/04-sandpile-instrument.md) · [05](.scratch/cascade/issues/05-sandpile-on-ramp.md) · [06](.scratch/cascade/issues/06-coda-panel-2.md). **Exhibit 3 (power grid) BUILT** (2026-07-24) from 🔒 ticket [07](.scratch/cascade/issues/07-network-exhibit.md) — instrument, 3-beat on-ramp, sandbox with the `slack` slider, coda panel 3, the **full 3-up board** + its three-clause seam, the landing's third door, and the `/exhibit → /synthesis` arrival rail — all verified in-browser (evidence below). **110 tests green.** The trio is complete.
 
 ---
 
@@ -116,6 +116,64 @@ Plan being executed: [2026-07-24-cascade-forest-fire-build.md](.claude/plans/202
 
 - Nothing blocking. Next work is **exhibit 3 (network)** plus coda panel 3 / the 3-up board — the board is already a step in a locked rule (`data-panels` drives the container width and the column count), so panel 3 mostly needs its own re-feel and annotated feature.
 - The returning-visitor path runs the 15,000-grain charge synchronously (~0.4 s of blocked main thread during hydration). Fine today; if it ever reads as a stall, chunk it across a few frames.
+
+---
+
+# Exhibit 3 — power grid / network cascade (Phase 5, 2026-07-24)
+
+Built from 🔒 ticket [07](.scratch/cascade/issues/07-network-exhibit.md) (9 forks + 16 derived decisions, `/grilling`). **Spine: "you can't tell which."** Fire and the sandpile hand out a *homogeneous* field; the grid's parts look alike and are not alike, completing the trio as **when · how big · which**.
+
+## Acceptance evidence (🔒 ticket 07 — walked live, not assumed)
+
+| Requirement | Result |
+|---|---|
+| The user tries to break the grid and cannot — twice — then one ordinary node takes most of it | Walked the on-ramp end-to-end: beat 1 any node **`dark 1%`**; beat 2 the **fattest dot** (hub, degree 8) **`dark 2%`** — absorbed; beat 3 the ringed median-degree node **`dark 82%`**. `tried` counted 1 → 2 → 3 across the failures. |
+| The trap is scientifically honest, not staged | The bake asserts it: hub node 63 (degree 8) → **1.7%**, ring node 22 (degree 5 = median) → **81.7%**. Under load redistribution the killer is a **bridge**, not a hub. A test fails if a retune ever breaks either claim. |
+| Baked profile agrees with the live cascade | `network.test.ts` asserts `cascade()` darkFrac == the baked value on every α stop, sampled across the grid — so a bright dot's rank always describes what just happened on the stage. |
+| The plot is built from the user's own clicks over the faint truth | Confirmed: two harmless tries pile on the flat floor (plot y≈380px), the ringed one lands on the cliff (y≈59px), three ranks from the left; annotation *"6 of 180 nodes take down more than half"* off the line with a hot-core dot. |
+| Cutting `slack` widens the cliff | Sandbox slider 0.4 → 0.2: tall needles (>50%) **17 → 76**. Snaps to baked stops; the backbone re-draws. |
+| The same drag, three outcomes (the board's whole point) | Panel 1 flips at a pixel; panel 2 climbs `1 in 2 → 1 in 868` with no break; **panel 3 jumps** `0.6 · 0.6 · 0.6 · 13.3 · 11.1 · 8.3 · 5.0 · 1.1 · 0.6 %` with no locatable line. `aria-valuetext` speaks *"node 43 of 180, takes down 71 percent."* |
+| 60fps | Cascade animation **median 16.7 ms/frame, p95 17.4 ms** (n=61) on a 68% blackout; the white-hot glow renders (418 warm FIRE-ramp pixels sampled mid-front). Worst-case synchronous cascade compute ≈ 23 ms warm (74 ms cold-JIT); even at 4× CPU throttle the payoff click blocks only 91 ms. |
+| Keyboard | Arrow keys move a visible focus ring to the nearest node in that direction; Enter takes it offline (`tried 0 → 1`, dot lands). Beat 3 moves the focus node onto the ring, so Enter completes the beat. |
+| Reduced motion | The cascade resolves as an immediate before/after swap carried by the readout + the new plot dot; restore is instant (code path mirrors the sandpile's verified pattern). |
+| No-JS | `/network` renders the baked ranked backbone, annotation, sci + source lines. `/synthesis` renders **all three panels' plots (180 SSR needles in panel 3), annotations, source lines, the 3-clause seam, and every copy line**; the drag hints hide. |
+| The board widens to n=3, then stacks at hero scale | Container 1500 / plots 430 side-by-side at ≥1200px; **571px** stacked below; no horizontal overflow at 390 / 700 / 1280 / 1440. Promise line **gone** at n=3 (nothing left to promise). |
+| Neutral infrastructure end to end | "Knock out" = a node goes offline; no social/political/attack framing anywhere. |
+
+## Deviations from the locked ticket (deliberate — flagged, not silent)
+
+1. **The grid needed local redundancy (diagonal ties) to make the spine true.** On a bare lattice the most-connected node is *also* the busiest, so beat 2 would be a lie (first bake: hub → 78% dark, "✗ BEAT 2 IS A LIE"). Adding diagonal edges (`DIAGONAL = 0.35`) makes well-connected nodes *routable around* — degree stops predicting betweenness — so the fragile nodes become bridges, not hubs. Real grids have exactly this redundancy around big substations. Ticket 07 fork 2 named Watts–Strogatz; this keeps that skeleton and adds the redundancy the physics required. The bake prints a pass/fail honesty check on both on-ramp claims.
+2. **`graph-stage.ts` is a sibling of `stage.ts`, not a generalization of it.** A field of cells and a graph of nodes-with-wires are different objects; forcing one interface over both would be churn. They share the locked bloom — `haloSprites()`, `HALO_SCALE`, the `lighter` composite were **extracted** from `stage.ts` and reused unchanged, so a failing node glows with exactly a burning cell's light.
+3. **The signature plot is a needle/bar geometry, not a curve** (`ProfilePlot.astro` + `profile.ts`), sharing the locked `.sp-*` treatment, `plot-layout` scales and palette — a seventh visual config, two disjoint element sets. The exhibit ranks the needles into a cliff; the coda leaves them in the grid's own order. One geometry, two orders — which *is* the coda move.
+4. **No Shuffle, no Play/Speed** (ticket 07 D4/D5, amending §3.3): the graph is the subject (one canonical seeded grid), and a cascade is an event, not a time base.
+5. **The coda ★ maps a stored fraction back to a node.** Storage is one number (`cascade.nw.worst` = the largest fraction, per D13); the coda finds the node whose baked blackout matches it and stars that needle — best-effort, absent-safe.
+6. **The 3-up board goes side-by-side at ≥1200px, not 1100.** Three 430px plots need the extra width to stay hero-scale; below it the board stacks and each returns to hero scale (the locked rule's intent). Panels 1+2's ≥1100px 2-up rule is untouched.
+
+## Numbers measured while building (the design constants)
+
+- **The grid:** 180 nodes (15×12 jittered lattice), 445 edges after diagonals + 6% long rewires, degrees 2–8 (median 5). Seed `0xbeef00`.
+- **The physics:** Motter–Lai — load = betweenness + 1, capacity = load₀ × (1 + α), iterate to a fixed point, then count anything stranded from the bulk. Betweenness via **allocation-free Brandes** (predecessors re-derived from BFS distances rather than stored — halved the worst-case click block).
+- **Lethal counts per `slack` stop:** α 0.2 → 64 · 0.3 → 19 · **0.4 → 6 (default)** · 0.55 → 0 · 0.8 → 0. Cutting slack widens the cliff; loosening it flattens the grid to safety.
+- **Baked artifact:** 5 α stops × 180 node blackouts, ~14 KB JSON. The exhibit's backbone and the coda's needle field read the same file; the live cascade agrees by construction (asserted).
+
+## Defects found by walking it live (all fixed)
+
+- **First bake failed the on-ramp's own honesty check** — the fattest dot took down 78%, so beat 2 ("even the biggest one" → absorbed) was a lie. Fixed structurally with local redundancy (deviation 1), not by rewording the beat. The bake now prints ✓/✗ on both claims so a future retune can't silently break them.
+- The worst-case cascade compute blocked the click **~140 ms** (a dropped frame at the payoff). Rewrote Brandes to drop the array-of-arrays predecessor lists → ~23 ms warm; identical physics (bake byte-for-byte unchanged, 21 tests still green).
+- Panel 3's annotation *"6 of 180 · nothing on the outside says which"* overran the narrow board panel; it now wraps to two lines on the ` · `, both bounded inside the plot at 430px.
+
+## Engine seams exhibit 3 added (🔒 ticket 07)
+
+- **`graph-stage.ts`** — the node/edge renderer; reuses the extracted `haloSprites()` from `stage.ts`. Spatial arrow-key navigation (nearest node in a direction) lives here.
+- **`network.ts`** — tested pure module: `createGrid` (seeded W–S + diagonals), Brandes `load`, `capacities`, `cascade` (rounds + islanding), `profile`/`ranked`/`rankOf`, `hubNode`/`pickRing`/`lethalCount`. 21 tests.
+- **`scripts/bake-network.ts`** — build-time ranked profiles per α stop, with a printed pass/fail check on the on-ramp's two claims. `npm run bake:network`.
+- **`ProfilePlot.astro` + `profile.ts`** — needle geometry in two orders (ranked cliff · unsorted field), reusing `plot-layout` scales and the locked treatment; re-lays-out at width.
+- **The rail** — a quiet persistent `synthesis →` link added to all three exhibit pages (`.page-rail`), back-links added to `/synthesis`.
+
+## Open
+
+- Nothing blocking. The trio + coda are complete. Remaining map frontier is **logo / favicon / share-OG** (the visual identity mark, deferred per the Namesake pattern).
+- The worst-case cascade click still blocks ~23 ms of synchronous betweenness (fine; the animation is smooth). If a future larger grid makes it read as a stall, chunk the round computation across frames.
 
 ---
 

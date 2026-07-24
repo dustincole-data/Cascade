@@ -1,6 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import surv from '../data/sandpile-survival.json';
+import net from '../data/network-profile.json';
+
+const lethal = net.meta.lethal[net.alphas.indexOf(net.defaultAlpha)]!;
 ---
 
 <BaseLayout
@@ -40,6 +43,17 @@ import surv from '../data/sandpile-survival.json';
       <span class="door-go">→</span>
     </a>
 
-    <p class="promise">cascade — the last exhibit.</p>
+    <a class="door" href="/network">
+      <span class="door-num">03</span>
+      <span class="door-body">
+        <span class="door-title">Power grid</span>
+        <span class="door-line">
+          Take out any node and the grid holds. One node — no different to look at — takes the whole
+          thing down.
+        </span>
+        <span class="door-meta">cascade · load redistribution · {lethal} of 180</span>
+      </span>
+      <span class="door-go">→</span>
+    </a>
   </section>
 </BaseLayout>

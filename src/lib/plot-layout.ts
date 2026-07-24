@@ -1,4 +1,5 @@
 import { PILE } from './sandpile.ts';
+import { NODES } from './network.ts';
 import { linearAxis, logAxis, type Axis } from './plot-geometry.ts';
 
 /**
@@ -123,3 +124,23 @@ export function survivalPath(sizes: number[], ys: number[], f: Frame, yMin: numb
 
 /** "1 in 25" — the coda's rarity words. Counting words, never 2.5×10⁻³. */
 export const oneIn = (p: number): number => Math.max(1, Math.round(1 / p));
+
+/* ── The network's two plots (🔒 ticket 07) ───────────────────────────────────
+ * Both are the same mark — one needle per node — over the same domain. The only
+ * difference is the ORDER: the exhibit ranks them into a cliff, the coda leaves
+ * them in the grid's own arbitrary order, where the monster is invisible again.
+ * That is the whole coda move, so it must be one geometry, not two.
+ */
+
+/** Half-node padding at each end so the first and last needle sit inside the frame. */
+export const nwDomain = (yTop: number): Domain => ({ xMin: 0.5, xMax: NODES + 0.5, yMin: 0, yMax: yTop });
+
+/** Round the tallest spike up to a decade of percent, so the floor is honestly flat. */
+export const nwYTop = (fracs: number[]): number =>
+  Math.min(100, Math.max(10, Math.ceil(Math.max(...fracs) * 10) * 10));
+
+export const nwMargins = (w: number): Margins =>
+  w < 500 ? { l: 42, r: 20, t: 30, b: 54 } : { l: 50, r: 26, t: 34, b: 62 };
+
+/** Needles thin as the plot narrows so 180 of them stay a fringe, not a smear. */
+export const needleWidth = (pw: number): number => Math.max(0.7, Math.min(2.4, (pw / NODES) * 0.55));

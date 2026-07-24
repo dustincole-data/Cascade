@@ -3,13 +3,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CodaPanel from '../components/CodaPanel.astro';
 import SignaturePlot from '../components/SignaturePlot.astro';
 import SurvivalPlot from '../components/SurvivalPlot.astro';
+import ProfilePlot from '../components/ProfilePlot.astro';
 import surv from '../data/sandpile-survival.json';
+import net from '../data/network-profile.json';
 
-/** Board scale at n=2 (🔒 ticket 06, fork 5): container ~1280, plots ~560.
- *  Below 1100px the board stacks and the client re-lays each plot out at hero
- *  scale — the plots take the width of the slot they land in. */
-const PLOT_W = 560;
-const PANELS = 2;
+/** Board scale at n=3 (🔒 ticket 06 fork 5 + ticket 07, D14): container ~1500,
+ *  plots ~430. Below 1200px the board stacks and the client re-lays each plot out
+ *  at hero scale — the plots take the width of the slot they land in. */
+const PLOT_W = 430;
+const PANELS = 3;
+const lethal = net.meta.lethal[net.alphas.indexOf(net.defaultAlpha)]!;
 ---
 
 <BaseLayout
@@ -55,12 +58,33 @@ const PANELS = 2;
           annotation={{ title: `no typical size · τ ≈ ${surv.meta.tau.toFixed(1)}` }}
         />
       </CodaPanel>
+
+      <CodaPanel
+        concept="CASCADE"
+        hint="drag the marker along the grid"
+        plain="One failure can take the whole connected system."
+        felt="Nothing looks load-bearing."
+        echo="A grid failing on a hot day."
+      >
+        <ProfilePlot
+          slot="plot"
+          id="coda-network"
+          kind="coda"
+          width={PLOT_W}
+          annotation={{ title: `${lethal} of 180 · nothing on the outside says which` }}
+        />
+      </CodaPanel>
     </div>
 
     <!-- The trio's intelligence, named ONCE and at board level, so every panel
-         stays standalone (🔒 ticket 06, forks 6 + 7). -->
-    <p class="coda-seam">One edge you cross. One a system finds by itself.</p>
-    <p class="promise">cascade — the last exhibit.</p>
+         stays standalone (🔒 tickets 06 forks 6+7, 07 fork 9). -->
+    <p class="coda-seam">One edge you cross. One a system finds by itself. One you’d never have picked.</p>
+
+    <nav class="coda-backlinks" aria-label="the three exhibits">
+      <a href="/forest-fire">01 Forest fire</a>
+      <a href="/sandpile">02 Sandpile</a>
+      <a href="/network">03 Power grid</a>
+    </nav>
   </section>
 </BaseLayout>
 

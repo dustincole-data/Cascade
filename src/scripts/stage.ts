@@ -2,9 +2,37 @@ import { fireColor, type RGB } from '../lib/palette.ts';
 
 /* Locked graft values (ticket 01): Direction B's stage bloom inside Direction
    A's framed chrome. Do not tune without noting why in PROGRESS.md. */
-const HALO_SCALE = 3.0;
+export const HALO_SCALE = 3.0;
 const HALO_ALPHA = 0.52;
-const HALO_BUCKETS = 12;
+export const HALO_BUCKETS = 12;
+
+/**
+ * The additive glow, pre-rendered once per size: one sprite per age bucket along
+ * the FIRE ramp, blitted with `lighter`. Exported because exhibit 3 draws a
+ * graph rather than a grid and must reuse *these* values rather than re-tune a
+ * second bloom (🔒 ticket 07, fork 2) — a failing node and a burning cell glow
+ * with the same light.
+ */
+export function haloSprites(R: number): HTMLCanvasElement[] {
+  const size = R * 2;
+  const sprites: HTMLCanvasElement[] = [];
+  for (let k = 0; k < HALO_BUCKETS; k++) {
+    const c = fireColor(k / (HALO_BUCKETS - 1));
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const g = cv.getContext('2d')!;
+    const grd = g.createRadialGradient(R, R, 0, R, R, R);
+    grd.addColorStop(0, `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${HALO_ALPHA})`);
+    grd.addColorStop(0.4, `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${HALO_ALPHA * 0.38})`);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd;
+    g.beginPath();
+    g.arc(R, R, R, 0, Math.PI * 2);
+    g.fill();
+    sprites.push(cv);
+  }
+  return sprites;
+}
 
 /**
  * The dark stage: a cached background of resting cells plus an O(front) glowing
@@ -56,26 +84,9 @@ export function createStage(canvas: HTMLCanvasElement, spec: StageSpec): Stage {
 
   const gap = () => (cell >= 6 ? 0.6 : 0.3);
 
-  function makeHaloSprites() {
+  function makeHalo() {
     const R = Math.round(cell * HALO_SCALE);
-    const size = R * 2;
-    const sprites: HTMLCanvasElement[] = [];
-    for (let k = 0; k < HALO_BUCKETS; k++) {
-      const c = fireColor(k / (HALO_BUCKETS - 1));
-      const cv = document.createElement('canvas');
-      cv.width = cv.height = size;
-      const g = cv.getContext('2d')!;
-      const grd = g.createRadialGradient(R, R, 0, R, R, R);
-      grd.addColorStop(0, `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${HALO_ALPHA})`);
-      grd.addColorStop(0.4, `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${HALO_ALPHA * 0.38})`);
-      grd.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = grd;
-      g.beginPath();
-      g.arc(R, R, R, 0, Math.PI * 2);
-      g.fill();
-      sprites.push(cv);
-    }
-    halo = { sprites, R };
+    halo = { sprites: haloSprites(R), R };
   }
 
   function resize(cssWidth: number, maxHeight = Infinity) {
@@ -95,7 +106,7 @@ export function createStage(canvas: HTMLCanvasElement, spec: StageSpec): Stage {
     bgCtx = offscreen.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    makeHaloSprites();
+    makeHalo();
   }
 
   function paintCell(i: number) {

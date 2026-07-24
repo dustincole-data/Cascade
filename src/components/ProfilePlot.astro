@@ -1,0 +1,159 @@
+---
+/**
+ * The network's signature plot (🔒 ticket 07, forks 4 + 8). One mark — a needle
+ * per node, height = the fraction of the grid its removal takes down — in two
+ * orders:
+ *
+ * - `live` — RANKED into a cliff: a long flat floor and a handful of monsters at
+ *   the far left, with the user's own attempts landing bright at their rank. The
+ *   plot is the map of what the hand could not see.
+ * - `coda`  — the SAME data in the grid's own arbitrary order, where the monster
+ *   is invisible again. Panel 3's marker scrubs it and the readout jumps.
+ *
+ * Locked §4.4 treatment throughout: faint gridlines, annotation off the data with
+ * a thin leader, JetBrains mono axes, a source line. Colour is one continuous
+ * cool→warm ramp by height (panel 2's rule — sequential, CVD-safe).
+ */
+import net from '../data/network-profile.json';
+import { HEIGHT, lerpStops, rgbStr } from '../lib/palette';
+import { lethalCount, ranked } from '../lib/network';
+import { makeFrame, needleWidth, nwDomain, nwMargins, nwYTop, codaHeight } from '../lib/plot-layout';
+
+interface Props {
+  id: string;
+  kind: 'live' | 'coda';
+  width: number;
+  height?: number;
+  /** Which `slack` stop this plot is showing. */
+  alpha?: number;
+  annotation: { title: string };
+}
+const { id, kind, width, height, alpha = net.defaultAlpha, annotation } = Astro.props;
+
+const coda = kind === 'coda';
+const ai = net.alphas.indexOf(alpha);
+const fracs = net.perNode[ai < 0 ? net.alphas.indexOf(net.defaultAlpha) : ai]!;
+const values = coda ? fracs : ranked(fracs);
+
+const m = coda ? nwMargins(width) : { l: 44, r: 20, t: 26, b: 46 };
+const h = height ?? codaHeight(width);
+const yTop = nwYTop(fracs);
+const dom = nwDomain(yTop);
+const f = makeFrame(width, h, m, dom);
+const nw = needleWidth(f.pw);
+
+const pct = (v: number) => v * 100;
+const colour = (v: number) => rgbStr(lerpStops(HEIGHT, Math.min(1, pct(v) / yTop)));
+
+const yTicks = [0, yTop / 2, yTop];
+/** The exhibit's x axis counts ranks. The coda's deliberately has NO tick labels:
+ *  the order is arbitrary, and numbering it would imply it means something. */
+const xTicks = coda ? [] : [1, 45, 90, 135, 180];
+
+/** The cliff's top — the exhibit's one annotated feature, with a hot-core dot.
+ *  The coda's leader touches the FLOOR instead and carries no dot: on a field
+ *  with no findable edge there is nothing to mark (🔒 ticket 06, fork 4's rule). */
+const ax = coda ? f.x.px(net.nodes * 0.5) : f.x.px(1);
+const ay = coda ? f.y.px(0) : f.y.px(pct(values[0]!));
+const lx = coda ? f.m.l + f.pw * 0.26 : f.m.l + f.pw * 0.28;
+const ly = coda ? f.m.t + f.ph * 0.4 : Math.max(f.m.t + 18, ay + 34);
+
+/** The coda's annotation is long ("N of 180 · nothing on the outside says which")
+ *  and the board's panels are narrow, so it wraps to two lines on the ' · '. The
+ *  exhibit's is short and stays one line. */
+const annoLines = coda ? annotation.title.split(' · ') : [annotation.title];
+
+const ramp = [0, 0.25, 0.5, 0.75, 1].map((t) => ({ t, c: rgbStr(lerpStops(HEIGHT, t)) }));
+const lethal = lethalCount(fracs);
+const aria = coda
+  ? `Every node in the grid, in the grid's own order, and how much of the grid goes dark when it fails. A flat fringe with ${lethal} scattered spikes: nothing about their position says which they are.`
+  : `Every node in the grid ranked by how much of the grid goes dark when it fails — a long flat floor and a cliff of ${lethal} at the left — with your own attempts marked on it.`;
+---
+
+<svg
+  id={id}
+  class:list={['sigplot', 'netplot', `sigplot--${coda ? 'coda' : 'exhibit'}`]}
+  viewBox={`0 0 ${width} ${h}`}
+  width={width}
+  height={h}
+  role="img"
+  aria-label={aria}
+  data-kind={kind}
+  data-alpha={alpha}
+  data-m={JSON.stringify(m)}
+>
+  <defs>
+    <linearGradient id={`${id}-ramp`} x1="0" y1={m.t + f.ph} x2="0" y2={m.t} gradientUnits="userSpaceOnUse">
+      {ramp.map((s) => <stop offset={s.t} stop-color={s.c} />)}
+    </linearGradient>
+  </defs>
+
+  <g class="sp-grid">
+    {yTicks.map((v) => <line data-gy={v} x1={m.l} y1={f.y.px(v)} x2={m.l + f.pw} y2={f.y.px(v)} />)}
+  </g>
+
+  <g class="sp-axis">
+    {
+      xTicks.map((v) => (
+        <text data-gx={v} x={f.x.px(v)} y={m.t + f.ph + 16} text-anchor="middle">
+          {v}
+        </text>
+      ))
+    }
+    {
+      yTicks.map((v) => (
+        <text data-gy={v} x={m.l - 8} y={f.y.px(v) + 3.5} text-anchor="end">
+          {Math.round(v)}
+        </text>
+      ))
+    }
+    <text class="sp-axis-title sp-xtitle" x={m.l + f.pw / 2} y={h - 6} text-anchor="middle"
+      >{coda ? 'the grid’s 180 nodes, in no particular order' : 'nodes, ranked by what they take down →'}</text
+    >
+    <text
+      class="sp-axis-title sp-ytitle"
+      transform={`translate(13 ${m.t + f.ph / 2}) rotate(-90)`}
+      text-anchor="middle">% of the grid dark</text
+    >
+  </g>
+
+  <g class="nw-needles" stroke-width={nw}>
+    {
+      values.map((v, i) => (
+        <line
+          data-i={i}
+          x1={f.x.px(i + 1)}
+          y1={f.y.px(0)}
+          x2={f.x.px(i + 1)}
+          y2={f.y.px(Math.max(pct(v), 0.35))}
+          stroke={colour(v)}
+        />
+      ))
+    }
+  </g>
+
+  {!coda && <g class="nw-tries"></g>}
+
+  <g class="sp-signature">
+    {!coda && <circle class="sp-knee-dot nw-cliff-dot" cx={ax} cy={ay} r="3.4"></circle>}
+    <line class="sp-leader" x1={ax} y1={coda ? ay - 6 : ay - 7} x2={lx + 22} y2={ly + 8}></line>
+    <text class="sp-anno-title" x={lx} y={ly}>{annoLines[0]}</text>
+    {annoLines[1] && <text class="sp-anno-sub" x={lx} y={ly + 15}>{annoLines[1]}</text>}
+  </g>
+
+  {
+    coda && (
+      <g class="nw-marker">
+        <line class="sp-marker-line" x1={f.x.px(1)} y1={m.t} x2={f.x.px(1)} y2={m.t + f.ph} />
+        <circle class="sp-marker-dot" cx={f.x.px(1)} cy={f.y.px(pct(values[0]!))} r="4" />
+        <text class="nw-readout" x={f.x.px(1) + 10} y={f.y.px(pct(values[0]!)) - 10}>
+          {`node 1 → ${pct(values[0]!).toFixed(1)}% dark`}
+        </text>
+      </g>
+    )
+  }
+
+  {coda && <text class="sp-star" data-hidden="true" x="-99" y="-99">★</text>}
+
+  <text class="sp-source" x={m.l} y={m.t - 12}>{net.meta.source}</text>
+</svg>

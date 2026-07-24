@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "test": "vitest run",
     "bake": "node --experimental-strip-types scripts/bake-curve.ts",
-    "bake:sandpile": "node --experimental-strip-types scripts/bake-sandpile.ts"
+    "bake:sandpile": "node --experimental-strip-types scripts/bake-sandpile.ts",
+    "bake:network": "node --experimental-strip-types scripts/bake-network.ts"
   },
   "dependencies": {
     "astro": "^5.18.2"

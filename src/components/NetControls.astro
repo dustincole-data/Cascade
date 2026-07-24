@@ -1,0 +1,46 @@
+---
+/**
+ * The network's control bar (🔒 ticket 07, D1 + fork 5). Same chrome vocabulary
+ * as the other exhibits, but the parameter slot holds a `slack` slider that is
+ * **released only into the sandbox** — the three beats are pure structure, so
+ * there is no dial to touch while you learn the rule.
+ *
+ * Unlike the other two exhibits there is **no Shuffle and no Play/Speed**: the
+ * graph is the subject (not statistical noise), and a cascade is an event (not a
+ * continuous time base). Readouts: `tried` (the spine's counter) · `dark` · `worst`.
+ */
+import { DEFAULT_SLACK, SLACK_STOPS } from '../lib/network';
+
+const min = SLACK_STOPS[0]!;
+const max = SLACK_STOPS[SLACK_STOPS.length - 1]!;
+---
+
+<div class="controls">
+  <button class="ctl-btn knock" data-act="knock" type="button">● Knock out</button>
+  <div class="ctl" data-control="slack" hidden>
+    <label for="slack">slack</label>
+    <input
+      type="range"
+      class="slack"
+      id="slack"
+      min={min}
+      max={max}
+      step="0.001"
+      value={DEFAULT_SLACK}
+      list="slack-stops"
+      aria-label="spare capacity"
+      aria-describedby="slack-readout"
+    />
+    <datalist id="slack-stops">
+      {SLACK_STOPS.map((s) => <option value={s}></option>)}
+    </datalist>
+    <span class="val slackval" id="slack-readout">{DEFAULT_SLACK.toFixed(2)}</span>
+  </div>
+  <button class="ctl-btn" data-act="reset" hidden type="button">↺ Reset</button>
+  <div class="spacer"></div>
+  <div class="readout" aria-live="polite">
+    <span class="r">tried <b class="triedval">0</b></span>
+    <span class="r">dark <b class="darkval">0%</b></span>
+    <span class="r worst" hidden>worst <b class="worstval">—</b></span>
+  </div>
+</div>
