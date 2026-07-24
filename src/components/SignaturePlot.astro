@@ -18,7 +18,10 @@ const { id, mode, width, height, showCurve = true, showScatter = true, markerD, 
 
 const D_MIN = 0.3;
 const D_MAX = 0.86;
-const m = mode === 'coda' ? { l: 56, r: 28, t: 34, b: 46 } : { l: 44, r: 20, t: 26, b: 38 };
+// The coda's bottom margin carries three stacked rows — tick labels, the
+// `★ your run` memory tick, and the axis title — so it needs the extra room.
+// At 46 the star sat 8px off the axis title and collided with it.
+const m = mode === 'coda' ? { l: 56, r: 28, t: 34, b: 66 } : { l: 44, r: 20, t: 26, b: 38 };
 const box: PlotBox = { w: width, h: height, m };
 const s = makeScale(box, D_MIN, D_MAX);
 const pw = width - m.l - m.r;
