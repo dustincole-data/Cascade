@@ -1,0 +1,351 @@
+/* ============================================================================
+   Cascade — global chrome. Ported from the LOCKED look reference:
+   .scratch/cascade/assets/01-forest-fire-look.html
+   The chrome is quiet and technical; it never competes with the stage.
+   ============================================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(120% 80% at 50% -10%, #0d1119 0%, var(--stage) 60%) fixed,
+    var(--stage);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ── Page shell ── */
+.page {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 34px clamp(16px, 4vw, 52px) 40px;
+}
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-weight: 600;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.lede {
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 68ch;
+  margin: 0;
+}
+
+/* ── Instrument frame ── */
+.instrument {
+  background: var(--chrome);
+  border: 1px solid var(--chrome-line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.inst-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 20px 13px;
+}
+
+.inst-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.inst-title h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.inst-title .sci {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+.divider {
+  height: 1px;
+  background: var(--chrome-line);
+}
+
+/* ── Stage + plot panels ── */
+.panels {
+  display: grid;
+  grid-template-columns: 1.62fr 1fr;
+}
+
+.panel {
+  position: relative;
+}
+
+.panel.stage {
+  border-right: 1px solid var(--chrome-line);
+}
+
+.panel.plot {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.panel-tag {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 2;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.panel.plot .panel-tag {
+  left: auto;
+  right: 14px;
+}
+
+/* ── Control bar ── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 13px 20px;
+  background: rgba(255, 255, 255, 0.012);
+  border-top: 1px solid var(--chrome-line);
+}
+
+.ctl {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ctl label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.ctl .val {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  min-width: 34px;
+  text-align: right;
+}
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: #262c38;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type='range'].density {
+  width: 148px;
+}
+
+input[type='range'].speed {
+  width: 70px;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--chrome);
+  box-shadow: 0 0 0 1px #2a3140;
+  cursor: pointer;
+  transition: box-shadow 0.12s;
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.5);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--ink);
+  border: 2px solid var(--chrome);
+  box-shadow: 0 0 0 1px #2a3140;
+  cursor: pointer;
+}
+
+button.ctl-btn {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: #171b23;
+  border: 1px solid #262c38;
+  padding: 6px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    border-color 0.14s,
+    background 0.14s,
+    color 0.14s;
+}
+
+button.ctl-btn:hover {
+  border-color: #38404f;
+  background: #1b2029;
+}
+
+button.ctl-btn.spark {
+  color: #ffe0b8;
+  border-color: rgba(255, 138, 61, 0.32);
+  background: rgba(255, 138, 61, 0.07);
+}
+
+button.ctl-btn.spark:hover {
+  border-color: rgba(255, 138, 61, 0.6);
+  background: rgba(255, 138, 61, 0.13);
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.readout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.readout .r {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.readout .r b {
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ── Footer ── */
+.site-foot {
+  max-width: var(--maxw);
+  margin: 60px auto 40px;
+  padding: 0 clamp(16px, 4vw, 52px);
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+.site-foot a {
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.site-foot a:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 860px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+
+  .panel.stage {
+    border-right: none;
+    border-bottom: 1px solid var(--chrome-line);
+  }
+}
+
+/* Reduced motion: no chrome transitions, no auto-play anywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Skip link + visible focus everywhere (a11y plumbing, spec §3.2). */
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--chrome);
+  color: var(--ink);
+  padding: 10px 14px;
+  border: 1px solid var(--chrome-line);
+  border-radius: var(--r);
+}
+
+.skip-link:focus {
+  left: 12px;
+  top: 12px;
+  z-index: 50;
+}

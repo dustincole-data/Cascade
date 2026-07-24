@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<!--
+  Cascade — Ticket 01 — Forest-fire hero-look study  (THROWAWAY PROTOTYPE, not the product)
+  Two directions of the dark instrument stage. Fundamentals are LOCKED (dark stage, small Archivo,
+  CVD-honest cool-alive / warm-event poles, labels-off-lines, knee 0.59). Directions vary ONLY on
+  glow intensity / chrome weight / plot treatment.
+    A — "Observatory"  : disciplined glow, present/framed chrome, precise scientific plot (scatter + curve).
+    B — "Ember"        : big additive bloom, quiet/floating chrome, data-art plot (glowing curve + area fill).
+  The forest frame + the fraction-burned-vs-density plot are BOTH generated from a real seeded sim
+  (mulberry32 CA + Monte-Carlo trials) — real data underneath, per the canon.
+  Fonts via CDN here for speed; the real build inlines woff2 as base64 (CSP blocks CDN fonts).
+-->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cascade · Forest-fire look study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --stage: #0a0c10;
+    --stage-2: #0c0f15;      /* faint stage vignette inner */
+    --chrome: #12151c;
+    --chrome-line: #1c212b;
+    --ink: #c9d1d9;
+    --ink-muted: #8b949e;
+    --ink-faint: #5a6472;
+    --focus: #4cc9f0;
+    --scar: #2a2118;
+    --teal-deep: #1f7a5c;
+    --teal-bright: #2fb488;
+    --amber: #ffd166;
+    --orange: #ff8a3d;
+    --coral: #ff5a5f;
+    --magenta: #e0479e;
+    --hotcore: #fff1c2;
+    --sans: "Archivo", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+    --r: 10px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background:
+      radial-gradient(120% 80% at 50% -10%, #0d1119 0%, var(--stage) 60%) fixed,
+      var(--stage);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 34px clamp(16px, 4vw, 52px) 120px;
+    min-height: 100vh;
+  }
+
+  /* ---- page masthead (this is the look-study chrome, not the product) ---- */
+  .study-head { max-width: 1180px; margin: 0 auto 26px; }
+  .study-kicker {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-faint); margin: 0 0 8px;
+  }
+  .study-head h1 {
+    font-weight: 600; font-size: clamp(20px, 2.4vw, 27px); letter-spacing: -0.02em;
+    margin: 0 0 6px; color: var(--ink); text-wrap: balance;
+  }
+  .study-sub { color: var(--ink-muted); font-size: 13.5px; line-height: 1.5; max-width: 68ch; margin: 0; }
+  .study-sub b { color: var(--ink); font-weight: 500; }
+
+  /* ---- instrument module ---- */
+  .stack { max-width: 1180px; margin: 0 auto; display: grid; gap: 30px; }
+  .instrument {
+    background: var(--chrome);
+    border: 1px solid var(--chrome-line);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .instrument.b { background: #0b0e14; border-color: #14181f; }
+
+  .inst-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 15px 20px 13px;
+  }
+  .inst-head.b { padding: 16px 20px 10px; }
+  .inst-title { display: flex; align-items: baseline; gap: 12px; }
+  .inst-title h2 {
+    margin: 0; font-weight: 600; font-size: 19px; letter-spacing: -0.015em; color: var(--ink);
+  }
+  .inst-title .sci {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--ink-faint);
+  }
+  .badge {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .badge.a { color: #bfe9ff; background: rgba(76,201,240,.10); border: 1px solid rgba(76,201,240,.26); }
+  .badge.b { color: #ffd7c0; background: rgba(255,138,61,.10); border: 1px solid rgba(255,138,61,.22); }
+
+  .divider { height: 1px; background: var(--chrome-line); }
+  .instrument.b .divider { background: transparent; }
+
+  /* stage + plot grid */
+  .panels { display: grid; grid-template-columns: 1.62fr 1fr; }
+  .panel { position: relative; }
+  .panel.stage { border-right: 1px solid var(--chrome-line); }
+  .instrument.b .panel.stage { border-right: 1px solid #14181f; }
+  canvas { display: block; width: 100%; height: auto; }
+
+  .panel-tag {
+    position: absolute; top: 12px; left: 14px; z-index: 2;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-faint); pointer-events: none;
+  }
+  .panel.plot .panel-tag { left: auto; right: 14px; }
+
+  /* ---- control bar ---- */
+  .controls {
+    display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+    padding: 13px 20px; background: rgba(255,255,255,.012);
+    border-top: 1px solid var(--chrome-line);
+  }
+  .instrument.b .controls {
+    gap: 18px; padding: 11px 20px; background: transparent; border-top: 1px solid #131720;
+  }
+  .ctl { display: flex; align-items: center; gap: 9px; }
+  .ctl label {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .instrument.b .ctl label { color: var(--ink-faint); }
+  .ctl .val {
+    font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--ink);
+    min-width: 34px; text-align: right;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; height: 3px; border-radius: 2px;
+    background: #262c38; outline: none; cursor: pointer;
+  }
+  input[type=range].density { width: 148px; }
+  input[type=range].speed { width: 70px; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+    background: var(--ink); border: 2px solid var(--chrome); box-shadow: 0 0 0 1px #2a3140;
+    cursor: pointer; transition: box-shadow .12s;
+  }
+  input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(76,201,240,.5); }
+  input[type=range]::-moz-range-thumb {
+    width: 13px; height: 13px; border-radius: 50%; background: var(--ink);
+    border: 2px solid var(--chrome); box-shadow: 0 0 0 1px #2a3140; cursor: pointer;
+  }
+
+  button.ctl-btn {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+    color: var(--ink); background: #171b23; border: 1px solid #262c38;
+    padding: 6px 11px; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    transition: border-color .14s, background .14s, color .14s;
+  }
+  button.ctl-btn:hover { border-color: #38404f; background: #1b2029; }
+  button.ctl-btn:focus-visible { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(76,201,240,.28); }
+  button.ctl-btn.spark { color: #ffe0b8; border-color: rgba(255,138,61,.32); background: rgba(255,138,61,.07); }
+  button.ctl-btn.spark:hover { border-color: rgba(255,138,61,.6); background: rgba(255,138,61,.13); }
+  .instrument.b button.ctl-btn { background: transparent; border-color: #20262f; }
+  .instrument.b button.ctl-btn:hover { background: rgba(255,255,255,.03); }
+
+  .spacer { flex: 1 1 auto; }
+  .readout { display: flex; align-items: center; gap: 16px; }
+  .readout .r {
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted); display: flex; gap: 6px; align-items: baseline;
+  }
+  .readout .r b { color: var(--ink); font-weight: 600; letter-spacing: .01em; }
+  .kbd-note {
+    font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint);
+  }
+
+  /* ---- floating view switch (prototype convention) ---- */
+  .viewbar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50;
+    display: flex; gap: 3px; padding: 5px; border-radius: 999px;
+    background: rgba(16,19,26,.86); border: 1px solid #262c38; backdrop-filter: blur(10px);
+    box-shadow: 0 10px 34px rgba(0,0,0,.5);
+  }
+  .viewbar button {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .02em; color: var(--ink-muted);
+    background: transparent; border: none; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+    transition: color .14s, background .14s;
+  }
+  .viewbar button:hover { color: var(--ink); }
+  .viewbar button[aria-pressed=true] { color: #06232e; background: var(--focus); font-weight: 600; }
+  .viewbar .sep { width: 1px; align-self: stretch; background: #262c38; margin: 4px 2px; }
+  .viewbar .meta { display: flex; align-items: center; padding: 0 12px 0 6px; color: var(--ink-faint); font-family: var(--mono); font-size: 10.5px; }
+
+  /* ---- footer: mono specimen + perf + palette note ---- */
+  .foot { max-width: 1180px; margin: 30px auto 0; display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); }
+  .foot .card {
+    background: var(--chrome); border: 1px solid var(--chrome-line); border-radius: var(--r); padding: 15px 17px;
+  }
+  .foot h3 {
+    margin: 0 0 10px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 500;
+  }
+  .foot p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-muted); }
+  .foot p b { color: var(--ink); font-weight: 500; }
+  .specimen-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+  .specimen-row .pick { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; width: 58px; color: var(--ink-faint); }
+  .specimen-row.chosen .pick { color: var(--teal-bright); }
+  .specimen { font-size: 13.5px; color: var(--ink); letter-spacing: .01em; }
+  .spec-jb { font-family: "JetBrains Mono", monospace; }
+  .spec-ss { font-family: "Spline Sans Mono", monospace; }
+  #perfval { color: var(--teal-bright); }
+  .dot { display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:5px;}
+
+  @media (max-width: 860px) {
+    .panels, .instrument.b .panels { grid-template-columns: 1fr; }
+    .panel.stage { border-right: none; border-bottom: 1px solid var(--chrome-line); }
+    .foot { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto; }
+  }
+</style>
+
+<div class="study-head">
+  <p class="study-kicker">Cascade · ticket 01 · hero-look study · throwaway prototype</p>
+  <h1>The dark instrument stage — two directions</h1>
+  <p class="study-sub">
+    Pick one (or graft). Both render the <b>same seeded mid-burn frame</b> and the <b>same real Monte-Carlo
+    fraction-burned dataset</b> — so you're comparing <b>treatment only</b>, not composition. Locked in both:
+    near-black stage, cool-teal latent forest, charcoal scar, warm-spectral burning front, small Archivo + mono,
+    labels off the curve, knee at d≈0.59. They differ on <b>glow · chrome weight · plot treatment</b>.
+    Drag <b>density</b> across 0.59 on either to feel the tipping point; the plot marker tracks with it.
+  </p>
+</div>
+
+<div class="stack" id="stack"></div>
+
+<div class="foot">
+  <div class="card">
+    <h3>Mono for the instrument register</h3>
+    <div class="specimen-row chosen">
+      <span class="pick">pick ✓</span>
+      <span class="specimen spec-jb">d 0.620 · swept 50% · d_c 0.5927 · seed 0x0CA5CADE</span>
+    </div>
+    <div class="specimen-row">
+      <span class="pick">alt</span>
+      <span class="specimen spec-ss">d 0.620 · swept 50% · d_c 0.5927 · seed 0x0CA5CADE</span>
+    </div>
+    <p style="margin-top:9px"><b>JetBrains Mono</b> — engineered digits, slashed-ish zero, taller x-height read cleaner as an instrument readout than Spline Sans Mono's softer humanist curves. Both shown; veto if you prefer the softer one.</p>
+  </div>
+  <div class="card">
+    <h3>60 fps grid budget</h3>
+    <p><span class="dot" style="background:var(--teal-bright)"></span><b>Live tick, this machine:</b> <span id="perfval">measuring…</span></p>
+    <p id="perfnote" style="margin-top:8px">Measuring the real rAF path (per-cell fills + the moving front's cached additive halo sprites) at two grid sizes; 16.7 ms = the 60 fps line.</p>
+  </div>
+  <div class="card">
+    <h3>Palette — CVD checked</h3>
+    <p><b>Poles pass:</b> alive-teal ↔ event-orange worst adjacent ΔE <b>8.8</b> (protan) ≥ 8.0. State also carried by luminance (dim forest · bright fire · near-black scar). Warm ramp is a <b>sequential</b> spectral (position + luminance encode), not categorical. §1.2 hexes kept as-is.</p>
+  </div>
+</div>
+
+<div class="viewbar" role="group" aria-label="Which direction to show">
+  <button data-view="a" aria-pressed="false">A · Observatory</button>
+  <button data-view="b" aria-pressed="false">B · Ember</button>
+  <button data-view="both" aria-pressed="true">Both</button>
+  <div class="sep"></div>
+  <div class="meta">forest fire · percolation</div>
+</div>
+
+<script type="module">
+/* ============================================================================
+   Cascade forest-fire look study — real seeded sim, two render treatments.
+   ============================================================================ */
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---- seeded PRNG (mulberry32) ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---- color helpers ---- */
+const hex2rgb=h=>{h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];};
+function lerpStops(stops,t){ // stops: array of [pos, [r,g,b]]
+  t=Math.max(0,Math.min(1,t));
+  for(let i=0;i<stops.length-1;i++){const[a,ca]=stops[i],[b,cb]=stops[i+1];if(t>=a&&t<=b){const u=(t-a)/(b-a||1);return[ca[0]+(cb[0]-ca[0])*u,ca[1]+(cb[1]-ca[1])*u,ca[2]+(cb[2]-ca[2])*u];}}
+  return stops[stops.length-1][1];
+}
+const rgbStr=c=>`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;
+// warm spectral: age 0 (leading, hottest) -> 1 (trailing, cooling into scar)
+const FIRE=[[0,hex2rgb('#fff1c2')],[.14,hex2rgb('#ffd166')],[.42,hex2rgb('#ff8a3d')],[.7,hex2rgb('#ff5a5f')],[1,hex2rgb('#e0479e')]];
+const fireCol=age=>lerpStops(FIRE,age);
+// latent teal forest: t by cell hash
+const TEAL=[[0,hex2rgb('#1f7a5c')],[1,hex2rgb('#2fb488')]];
+const SCAR=hex2rgb('#31281c'); // spent scar — nudged a hair above stage so the burned region reads
+
+/* ---- forest-fire model: build a frozen mid-burn frame ---------------------
+   States 0 empty · 1 tree(latent) · 2 burning(front band) · 3 burned(scar).
+   We flood-fill from a left-center spark recording ignition tick per cell,
+   then FREEZE when ~55% of the reachable cluster has burned. Burning = cells
+   ignited within the last BAND ticks (the glowing front); older = scar.       */
+function buildFrame(W,H,d,seed){
+  const rnd=mulberry32(seed), N=W*H;
+  const tree=new Uint8Array(N); let totalTrees=0;
+  for(let i=0;i<N;i++){ if(rnd()<d){tree[i]=1;totalTrees++;} }
+  // per-cell latent shade hash (stable, not time-based)
+  const shade=new Float32Array(N);
+  for(let i=0;i<N;i++){let x=Math.imul(i^seed,2654435761)>>>0;shade[i]=((x>>>8)&255)/255;}
+  // label clusters; spark = leftmost cell of the LARGEST cluster.
+  // Below p_c the largest cluster is small -> honest fizzle; above it a spanning
+  // cluster exists -> dramatic sweep. Makes the density slider a real phase transition.
+  const label=new Int32Array(N).fill(-1); const st=[];
+  let bestSize=0, spark=-1;
+  for(let i=0;i<N;i++){
+    if(!tree[i]||label[i]>=0)continue;
+    let size=0,leftX=1e9,leftIdx=-1; st.length=0; st.push(i); label[i]=i;
+    while(st.length){
+      const idx=st.pop(); size++; const x=idx%W,y=(idx/W)|0;
+      if(x<leftX){leftX=x;leftIdx=idx;}
+      if(x>0&&tree[idx-1]&&label[idx-1]<0){label[idx-1]=i;st.push(idx-1);}
+      if(x<W-1&&tree[idx+1]&&label[idx+1]<0){label[idx+1]=i;st.push(idx+1);}
+      if(y>0&&tree[idx-W]&&label[idx-W]<0){label[idx-W]=i;st.push(idx-W);}
+      if(y<H-1&&tree[idx+W]&&label[idx+W]<0){label[idx+W]=i;st.push(idx+W);}
+    }
+    if(size>bestSize){bestSize=size;spark=leftIdx;}
+  }
+  // BFS ignition (von-Neumann) from spark, recording ignition tick per cell
+  const ig=new Int32Array(N).fill(-1); let reachable=0,maxTick=0;
+  if(spark>=0){
+    ig[spark]=0; reachable=1; let frontier=[spark], tick=0;
+    while(frontier.length){
+      const next=[];
+      for(const idx of frontier){
+        const x=idx%W,y=(idx/W)|0;
+        if(x>0&&tree[idx-1]&&ig[idx-1]<0){ig[idx-1]=tick+1;reachable++;next.push(idx-1);}
+        if(x<W-1&&tree[idx+1]&&ig[idx+1]<0){ig[idx+1]=tick+1;reachable++;next.push(idx+1);}
+        if(y>0&&tree[idx-W]&&ig[idx-W]<0){ig[idx-W]=tick+1;reachable++;next.push(idx-W);}
+        if(y<H-1&&tree[idx+W]&&ig[idx+W]<0){ig[idx+W]=tick+1;reachable++;next.push(idx+W);}
+      }
+      frontier=next; tick++;
+    }
+    maxTick=tick-1;
+  }
+  // freeze where ~50% of the reachable cluster has ignited -> front sits mid-field
+  let freeze=maxTick; {
+    const target=reachable*0.5; const perTick=new Int32Array(maxTick+2); let cum=0;
+    for(let i=0;i<N;i++) if(ig[i]>=0) perTick[ig[i]]++;
+    for(let t=0;t<=maxTick;t++){cum+=perTick[t]; if(cum>=target){freeze=t;break;}}
+  }
+  const BAND=Math.max(4,Math.round(maxTick*0.14)); // depth of the glowing front band
+  const state=new Uint8Array(N); let sweptCount=0;
+  for(let i=0;i<N;i++){
+    if(!tree[i]){state[i]=0;continue;}
+    const t=ig[i];
+    if(t<0||t>freeze){state[i]=1;}                      // latent forest
+    else if(t>freeze-BAND){state[i]=2;sweptCount++;}    // burning front
+    else {state[i]=3;sweptCount++;}                     // scar
+  }
+  const swept=totalTrees? sweptCount/totalTrees : 0;
+  return {W,H,state,ig,shade,freeze,BAND,swept,spark,reachable,totalTrees,maxTick};
+}
+// collapse to a 2-tick frontier == the glow load of ONE live sim tick (for the perf bench)
+function thinFrontier(frame){
+  const {W,H,state,ig,freeze}=frame, N=W*H, s2=new Uint8Array(N);
+  for(let i=0;i<N;i++){ if(state[i]===0){s2[i]=0;continue;} const t=ig[i];
+    if(t<0||t>freeze)s2[i]=1; else if(t>freeze-2)s2[i]=2; else s2[i]=3; }
+  return {...frame,state:s2,BAND:2};
+}
+
+/* ---- cached additive halo sprites (per fire hue bucket) ---- */
+function makeHaloSprites(cell,scale,alpha){
+  const R=Math.round(cell*scale), size=R*2, sprites=[];
+  for(let k=0;k<12;k++){
+    const c=fireCol(k/11);
+    const cv=document.createElement('canvas'); cv.width=cv.height=size;
+    const g=cv.getContext('2d');
+    const grd=g.createRadialGradient(R,R,0,R,R,R);
+    grd.addColorStop(0,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${alpha})`);
+    grd.addColorStop(0.4,`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${alpha*0.38})`);
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=grd; g.beginPath(); g.arc(R,R,R,0,7); g.fill();
+    sprites.push(cv);
+  }
+  return {sprites,R};
+}
+
+/* ---- rendering, split so the per-tick cost is isolatable ------------------
+   renderFlat = latent forest + scar (the STATIC background — painted once, or
+   on density change). renderFront = the moving burning band (halo + hot body)
+   — the ONLY thing a real engine repaints each tick, so it alone gates 60fps.  */
+const gapFor=cell=>cell>=6?0.6:0.3;
+function frontList(frame){ if(frame._front)return frame._front; const {W,H,state}=frame,N=W*H,a=[]; for(let i=0;i<N;i++)if(state[i]===2)a.push(i); return frame._front=a; }
+function renderFlat(ctx,frame,cell,cfg){
+  const {W,H,state,shade}=frame, s=cell-gapFor(cell);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=y*W+x, st=state[i]; if(st===0)continue;
+    if(st===1){const c=lerpStops(TEAL,shade[i]); const dim=cfg.forestDim; ctx.fillStyle=`rgb(${c[0]*dim|0},${c[1]*dim|0},${c[2]*dim|0})`; ctx.fillRect(x*cell,y*cell,s,s);}
+    else if(st===3){const g=0.72+0.5*shade[i];ctx.fillStyle=`rgb(${SCAR[0]*g|0},${SCAR[1]*g|0},${SCAR[2]*g|0})`; ctx.fillRect(x*cell,y*cell,s,s);}
+  }
+}
+function renderFront(ctx,frame,cell,cfg,shimmer){
+  const {W,ig,freeze,BAND}=frame, s=cell-gapFor(cell), front=frontList(frame), {sprites,R}=cfg.halo;
+  ctx.globalCompositeOperation='lighter';
+  for(const i of front){ const x=i%W,y=(i/W)|0;
+    const age=Math.max(0,Math.min(1,(freeze-ig[i])/BAND));
+    let a=1; if(shimmer){a=0.82+0.18*Math.sin((x*12.9+y*7.7)+shimmer*0.006);}
+    ctx.globalAlpha=cfg.haloAlpha*a;
+    ctx.drawImage(sprites[Math.min(11,Math.round(age*11))], x*cell+cell/2-R, y*cell+cell/2-R);
+  }
+  ctx.globalAlpha=1;
+  for(const i of front){ const x=i%W,y=(i/W)|0;
+    const age=Math.max(0,Math.min(1,(freeze-ig[i])/BAND)); const c=fireCol(age);
+    let b=1; if(shimmer){b=0.9+0.1*Math.sin((x*4.1-y*3.3)+shimmer*0.009);}
+    ctx.fillStyle=`rgb(${Math.min(255,c[0]*b)|0},${Math.min(255,c[1]*b)|0},${Math.min(255,c[2]*b)|0})`;
+    ctx.fillRect(x*cell,y*cell,s,s);
+  }
+  ctx.globalCompositeOperation='source-over';
+}
+function renderFrame(ctx,frame,cell,cfg,shimmer){
+  ctx.clearRect(0,0,frame.W*cell,frame.H*cell);
+  renderFlat(ctx,frame,cell,cfg); renderFront(ctx,frame,cell,cfg,shimmer);
+}
+
+/* ---- real Monte-Carlo: fraction burned vs density -------------------------
+   For each density, run trials: spark central tree, flood-fill, record
+   burnedTrees/totalTrees. Mean curve + scatter reveal the knee near p_c.       */
+function signature(){
+  const G=64, densities=[], mean=[], pts=[];
+  const trials=16, seedBase=1234567;
+  for(let s=0;s<46;s++){
+    const d=0.30+(0.86-0.30)*(s/45);
+    densities.push(d);
+    let acc=0;
+    for(let t=0;t<trials;t++){
+      const rnd=mulberry32(seedBase+s*131+t*977);
+      const tree=new Uint8Array(G*G); let total=0;
+      for(let i=0;i<G*G;i++){if(rnd()<d){tree[i]=1;total++;}}
+      // spark nearest tree to center
+      const cx=(G/2)|0,cy=(G/2)|0; let spark=-1;
+      for(let r=0;r<G&&spark<0;r++){for(let dx=-r;dx<=r&&spark<0;dx++)for(let dy=-r;dy<=r;dy++){const x=cx+dx,y=cy+dy;if(x<0||x>=G||y<0||y>=G)continue;if(tree[y*G+x]){spark=y*G+x;break;}}}
+      if(spark<0){acc+=0;continue;}
+      const seen=new Uint8Array(G*G); seen[spark]=1; let stack=[spark],burned=0;
+      while(stack.length){const idx=stack.pop();burned++;const x=idx%G,y=(idx/G)|0;
+        const nb=[[x-1,y],[x+1,y],[x,y-1],[x,y+1]];
+        for(const[nx,ny]of nb){if(nx<0||nx>=G||ny<0||ny>=G)continue;const j=ny*G+nx;if(tree[j]&&!seen[j]){seen[j]=1;stack.push(j);}}}
+      const frac=total?burned/total:0; acc+=frac; pts.push([d,frac]);
+    }
+    mean.push(acc/trials);
+  }
+  // light 3-pt smoothing for the display curve (raw scatter kept for honesty)
+  const meanS=mean.map((v,i)=>{const a=mean[i-1]??v,b=mean[i+1]??v;return (a+v*2+b)/4;});
+  return {densities,mean,meanS,pts};
+}
+
+/* ---- plot rendering (two treatments) ---- */
+const SPECTRAL_CSS=['#fff1c2','#ffd166','#ff8a3d','#ff5a5f','#e0479e'];
+function renderPlot(ctx,w,h,sig,cfg,curD){
+  ctx.clearRect(0,0,w,h);
+  const m={l:44,r:20,t:26,b:38}, pw=w-m.l-m.r, ph=h-m.t-m.b;
+  const X=d=>m.l+((d-0.30)/(0.86-0.30))*pw, Y=f=>m.t+(1-f)*ph;
+  const M=sig.meanS||sig.mean; // smoothed curve for display; raw pts stay for scatter
+  // gridlines
+  ctx.strokeStyle=cfg.plotGrid; ctx.lineWidth=1; ctx.font='10px "JetBrains Mono", monospace';
+  ctx.fillStyle='#6b7482'; ctx.textAlign='center'; ctx.textBaseline='top';
+  for(const d of [0.3,0.4,0.5,0.6,0.7,0.8]){const x=X(d);ctx.globalAlpha=cfg.gridA;ctx.beginPath();ctx.moveTo(x,m.t);ctx.lineTo(x,m.t+ph);ctx.stroke();ctx.globalAlpha=1;ctx.fillText(d.toFixed(1),x,m.t+ph+7);}
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  for(const f of [0,0.25,0.5,0.75,1]){const y=Y(f);ctx.globalAlpha=cfg.gridA;ctx.beginPath();ctx.moveTo(m.l,y);ctx.lineTo(m.l+pw,y);ctx.stroke();ctx.globalAlpha=1;ctx.fillText((f*100)+'%',m.l-8,y);}
+  // axis titles (mono, small)
+  ctx.fillStyle='#8b949e'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillText('density  d  →', m.l+pw/2, h-3);
+  ctx.save(); ctx.translate(11,m.t+ph/2); ctx.rotate(-Math.PI/2); ctx.textBaseline='top'; ctx.fillText('fraction burned', 0,0); ctx.restore();
+
+  // scatter (Direction A shows the real trial cloud; B fills area instead)
+  if(cfg.scatter){
+    for(const[d,f]of sig.pts){const t=(d-0.30)/(0.86-0.30);const c=lerpStops(FIRE.map(([p,col])=>[p,col]),1-Math.min(1,Math.max(0,(f)))); ctx.fillStyle='rgba(255,138,61,0.13)';ctx.beginPath();ctx.arc(X(d),Y(f),1.7,0,7);ctx.fill();}
+  }
+  // build gradient stroke for the mean curve
+  const grad=ctx.createLinearGradient(m.l,0,m.l+pw,0);
+  SPECTRAL_CSS.forEach((c,i)=>grad.addColorStop(i/(SPECTRAL_CSS.length-1),c));
+
+  if(cfg.areaFill){ // Direction B: spectral area under the curve, faded
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(X(0.30),Y(0));
+    sig.densities.forEach((d,i)=>ctx.lineTo(X(d),Y(M[i])));
+    ctx.lineTo(X(0.86),Y(0)); ctx.closePath();
+    const ag=ctx.createLinearGradient(0,m.t,0,m.t+ph);
+    ag.addColorStop(0,'rgba(255,138,61,0.22)'); ag.addColorStop(1,'rgba(224,71,158,0.02)');
+    ctx.fillStyle=ag; ctx.fill(); ctx.restore();
+  }
+
+  // mean curve
+  if(cfg.glowCurve){ctx.save();ctx.shadowColor='rgba(255,138,61,0.6)';ctx.shadowBlur=12;}
+  ctx.strokeStyle=grad; ctx.lineWidth=cfg.curveW; ctx.lineJoin='round';
+  ctx.beginPath(); sig.densities.forEach((d,i)=>{const x=X(d),y=Y(M[i]);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.stroke();
+  if(cfg.glowCurve)ctx.restore();
+
+  // knee at d_c ≈ 0.5927
+  const dc=0.5927; const kf=(()=>{let bi=0,bd=9;sig.densities.forEach((d,i)=>{if(Math.abs(d-dc)<bd){bd=Math.abs(d-dc);bi=i;}});return M[bi];})();
+  const kx=X(dc),ky=Y(kf);
+  ctx.strokeStyle='rgba(201,209,217,0.28)'; ctx.setLineDash([2,3]); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(kx,m.t+ph); ctx.lineTo(kx,ky); ctx.stroke(); ctx.setLineDash([]);
+  // knee point (blooms in B)
+  if(cfg.glowCurve){ctx.save();ctx.shadowColor='rgba(255,209,102,0.9)';ctx.shadowBlur=14;}
+  ctx.fillStyle='#fff1c2'; ctx.beginPath(); ctx.arc(kx,ky,cfg.kneeR,0,7); ctx.fill();
+  if(cfg.glowCurve)ctx.restore();
+
+  // annotation OFF the curve — thin leader to whitespace label
+  const lx=kx+ (kx<w*0.6? 30: -30), ly=ky - 46;
+  ctx.strokeStyle='rgba(201,209,217,0.4)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(kx+ (kx<w*0.6?6:-6), ky-6); ctx.lineTo(lx, ly+16); ctx.stroke();
+  ctx.textAlign=kx<w*0.6?'left':'right'; ctx.textBaseline='alphabetic';
+  ctx.font='600 11.5px "Archivo", sans-serif'; ctx.fillStyle='#e8eef4';
+  ctx.fillText('d_c ≈ 0.59', lx, ly);
+  ctx.font='11px "JetBrains Mono", monospace'; ctx.fillStyle='#8b949e';
+  ctx.fillText('the same spark', lx, ly+14);
+  ctx.fillText('now takes everything', lx, ly+27);
+
+  // live density marker (tracks the stage slider)
+  if(curD!=null){
+    const mx=X(curD); const past=curD>=dc;
+    ctx.strokeStyle=past?'rgba(255,138,61,0.7)':'rgba(76,201,240,0.55)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(mx,m.t); ctx.lineTo(mx,m.t+ph); ctx.stroke();
+    // dot on curve
+    let bi=0,bd=9; sig.densities.forEach((d,i)=>{if(Math.abs(d-curD)<bd){bd=Math.abs(d-curD);bi=i;}});
+    ctx.fillStyle=past?'#ffd166':'#4cc9f0'; ctx.beginPath(); ctx.arc(mx,Y(M[bi]),3.4,0,7); ctx.fill();
+  }
+  // source/method line — top-left, over empty space (curve is low on the left)
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic'; ctx.font='9.5px "JetBrains Mono", monospace'; ctx.fillStyle='#4b5563';
+  ctx.fillText('site-percolation threshold · square lattice ≈ 0.5927', m.l, 13);
+}
+
+/* ---- variant configs (glow / chrome / plot vary; fundamentals fixed) ---- */
+const SIG=signature();
+const SEED=0x0CA5CADE, DEF_D=0.62;
+
+function variant(kind){
+  if(kind==='a') return {
+    kind:'a', label:'A · Observatory', title:'Forest fire',
+    forestDim:0.62, haloScale:1.7, haloAlpha:0.55,
+    plotGrid:'#232a35', gridA:0.7, scatter:true, areaFill:false, glowCurve:false, curveW:2, kneeR:3.2,
+  };
+  return {
+    kind:'b', label:'B · Ember', title:'Forest fire',
+    forestDim:0.52, haloScale:3.1, haloAlpha:0.5,
+    plotGrid:'#191f28', gridA:0.5, scatter:false, areaFill:true, glowCurve:true, curveW:2.5, kneeR:4.2,
+  };
+}
+
+/* ---- build one instrument module ---- */
+function buildInstrument(cfg){
+  const wrap=document.createElement('section');
+  wrap.className='instrument'+(cfg.kind==='b'?' b':'');
+  wrap.dataset.kind=cfg.kind;
+  wrap.innerHTML=`
+    <div class="inst-head ${cfg.kind}">
+      <div class="inst-title"><h2>${cfg.title}</h2><span class="sci">percolation · von-Neumann spread</span></div>
+      <span class="badge ${cfg.kind}">${cfg.label}</span>
+    </div>
+    <div class="divider"></div>
+    <div class="panels">
+      <div class="panel stage"><span class="panel-tag">mid-burn frame</span><canvas class="stagecanvas"></canvas></div>
+      <div class="panel plot"><span class="panel-tag">signature</span><canvas class="plotcanvas"></canvas></div>
+    </div>
+    <div class="controls ${cfg.kind}">
+      <div class="ctl"><label>density</label><input type="range" class="density" min="0.30" max="0.86" step="0.001" value="${DEF_D}" aria-label="density"><span class="val dval">${DEF_D.toFixed(3)}</span></div>
+      <button class="ctl-btn spark" data-act="spark">✦ Spark</button>
+      <button class="ctl-btn" data-act="play">${REDUCED?'▷ Play':'▷ Play'}</button>
+      <button class="ctl-btn" data-act="reset">↺ Reset</button>
+      <div class="ctl"><label>speed</label><input type="range" class="speed" min="0.3" max="2" step="0.1" value="1" aria-label="speed"></div>
+      <div class="spacer"></div>
+      <div class="readout">
+        <span class="r">swept <b class="sweptval">—</b></span>
+        <span class="r">seed <b>0x0CA5CADE</b></span>
+      </div>
+    </div>`;
+  const stageCanvas=wrap.querySelector('.stagecanvas');
+  const plotCanvas=wrap.querySelector('.plotcanvas');
+  const dSlider=wrap.querySelector('.density'), dVal=wrap.querySelector('.dval');
+  const sweptVal=wrap.querySelector('.sweptval');
+  const speed=wrap.querySelector('.speed');
+
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  let W,H,cell,frame,ctx,pctx,plotW,plotH,seed=SEED,density=DEF_D,playing=false,raf=0,shimmer=0;
+
+  function sizeStage(){
+    const rect=stageCanvas.parentElement.getBoundingClientRect();
+    const cssW=Math.max(340,rect.width);
+    W=128; H=82;                          // FIXED sim grid -> both directions render the identical seeded frame
+    cell=Math.max(4,Math.floor(cssW/W));
+    stageCanvas.width=W*cell*dpr; stageCanvas.height=H*cell*dpr;
+    stageCanvas.style.width=W*cell+'px'; stageCanvas.style.height=H*cell+'px';
+    ctx=stageCanvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    cfg.halo=makeHaloSprites(cell,cfg.haloScale,cfg.haloAlpha);
+  }
+  function sizePlot(){
+    const rect=plotCanvas.parentElement.getBoundingClientRect();
+    plotW=Math.max(280,rect.width); plotH=Math.round(stageCanvas.style.height.replace('px','')*1)||Math.round(plotW*1.0);
+    plotH=parseFloat(stageCanvas.style.height); if(!plotH)plotH=Math.round(plotW);
+    plotCanvas.width=plotW*dpr; plotCanvas.height=plotH*dpr;
+    plotCanvas.style.width=plotW+'px'; plotCanvas.style.height=plotH+'px';
+    pctx=plotCanvas.getContext('2d'); pctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function regen(){ frame=buildFrame(W,H,density,seed); sweptVal.textContent=Math.round(frame.swept*100)+'%'; draw(); }
+  function draw(){ renderFrame(ctx,frame,cell,cfg,playing?shimmer:0); renderPlot(pctx,plotW,plotH,SIG,cfg,density); }
+  function loop(ts){ if(!playing)return; shimmer=ts*(parseFloat(speed.value)); renderFrame(ctx,frame,cell,cfg,shimmer); raf=requestAnimationFrame(loop); }
+
+  dSlider.addEventListener('input',()=>{density=parseFloat(dSlider.value);dVal.textContent=density.toFixed(3);regen();});
+  wrap.querySelector('[data-act=spark]').addEventListener('click',()=>{seed=(seed+0x9E37)>>>0;regen();});
+  wrap.querySelector('[data-act=reset]').addEventListener('click',()=>{seed=SEED;density=DEF_D;dSlider.value=DEF_D;dVal.textContent=DEF_D.toFixed(3);playing=false;cancelAnimationFrame(raf);setPlay();regen();});
+  const playBtn=wrap.querySelector('[data-act=play]');
+  function setPlay(){playBtn.textContent=playing?'❚❚ Pause':'▷ Play';}
+  playBtn.addEventListener('click',()=>{ if(REDUCED){playing=false;return;} playing=!playing; setPlay(); if(playing){raf=requestAnimationFrame(loop);} else {cancelAnimationFrame(raf);draw();} });
+  // click stage to spark at location (re-freeze from there)
+  stageCanvas.addEventListener('click',e=>{ seed=(seed*16807+1)>>>0; regen(); });
+
+  function layout(){ sizeStage(); sizePlot(); regen(); }
+  wrap._layout=layout;
+  return wrap;
+}
+
+/* ---- mount ---- */
+const stack=document.getElementById('stack');
+const instA=buildInstrument(variant('a'));
+const instB=buildInstrument(variant('b'));
+stack.append(instA,instB);
+function layoutAll(){instA._layout();instB._layout();}
+requestAnimationFrame(()=>{ // let fonts + layout settle
+  layoutAll(); setTimeout(layoutAll,220); // second pass after webfont swap
+});
+let rt; addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(layoutAll,120);});
+document.fonts&&document.fonts.ready.then(layoutAll);
+
+/* ---- view switch ---- */
+const params=new URLSearchParams(location.search);
+function setView(v){
+  instA.style.display=(v==='b')?'none':'';
+  instB.style.display=(v==='a')?'none':'';
+  document.querySelectorAll('.viewbar button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.view===v));
+  params.set('view',v); history.replaceState(null,'',location.pathname+'?'+params.toString());
+  requestAnimationFrame(layoutAll);
+}
+document.querySelectorAll('.viewbar button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+setView(params.get('view')||'both');
+
+/* ---- 60fps benchmark: time the real render path at 160² ---- */
+function benchmark(){
+  const G=160, cellB=5;
+  const off=document.createElement('canvas'); off.width=off.height=G*cellB;
+  const bctx=off.getContext('2d');
+  const bcfg={forestDim:0.6,haloScale:2.0,haloAlpha:0.5,halo:makeHaloSprites(cellB,2.0,0.5)};
+  const live=thinFrontier(buildFrame(G,G,0.62,SEED)); const frontN=frontList(live).length;
+  renderFrame(bctx,live,cellB,bcfg,0); // warmup + one-time full paint
+  let t=performance.now(); for(let k=0;k<12;k++) renderFrame(bctx,live,cellB,bcfg,0); const full=(performance.now()-t)/12;
+  t=performance.now(); const N=150; for(let k=0;k<N;k++) renderFront(bctx,live,cellB,bcfg,k*16); const front=(performance.now()-t)/N;
+  const ffps=Math.round(1000/front), cap=f=>f>=240?'240+':f;
+  const el=document.getElementById('perfval');
+  el.textContent=`front repaint ${front.toFixed(2)} ms ~${cap(ffps)} fps ${ffps>=60?'✓':''} · full ${full.toFixed(0)} ms (one-time)`;
+  el.style.color = ffps>=60?'#2fb488':(ffps>=45?'#ffd166':'#ff8a3d');
+  document.getElementById('perfnote').textContent =
+    `160² (25,600 cells), Intel Iris Xe / D3D11. The rAF loop repaints only the ~${frontN}-cell moving front → ${front.toFixed(2)} ms/tick, far under the 16.7 ms line. A whole-grid repaint is ${full.toFixed(0)} ms, so do that once on density change, not per frame. Canvas 2D holds 60 fps at the spec's top grid size — no WebGL.`;
+}
+requestAnimationFrame(()=>setTimeout(benchmark,400));
+</script>

@@ -1,0 +1,51 @@
+# Cascade — Wayfinder Map
+
+Label: `wayfinder:map`
+
+## Destination
+
+A locked visual design spec + build plan for **Cascade** — a personal explorable-explanation site for dustincoledata on ONE idea, *how one small action can have enormous consequences*, told as three lean interactive exhibits (forest-fire · sandpile · network) sharing one engine/shell — ready to hand to a separate BUILD session. New standalone repo under `dustincole-data` → own Vercel → `cascade.dustincoledata.com` → linked from dustincoledata.com. **Plan, don't build:** this map produces decisions + a spec in `.claude/plans/`, not the app.
+
+## Notes
+
+**Thesis (through-line = the point):** *"One small thing, enormous consequences — three ways the world does it"* — **threshold · criticality · cascade.** The synthesis across the three IS the intelligence (the thing the retired "Emergence"/boids framing lacked).
+
+**Scope discipline (the low-risk plan):** build ONE shared shell (visual system, palette, chrome, on-ramp→sandbox structure, click-to-act + slider + play/pause/reset) + the **forest-fire exhibit end-to-end FIRST**; exhibits 2 & 3 graduate onto the proven shell = new **rule-sets, not new products** (~1.4× work). If time runs short, one complete exhibit still ships. Per exhibit: guided on-ramp (few show-don't-tell beats) → free sandbox.
+
+**Hard constraints (verbatim):** FREE; LOW upkeep — fully **in-browser computed, NO dataset, no cron**; canvas 2D (WebGL only if an exhibit truly needs it); **deterministic where possible** (seedable PRNG); static ~zero runtime; self-contained; personal + **apolitical** (network = neutral power grid).
+
+**Design canon (consult every design ticket):** dark instrument stage — near-black field, the sim glows on it (Bremer spectral+glow's natural home), quiet neutral chrome. Colorful graphics are RIGOROUS real (sim-generated) data — labels OFF the lines, CVD-validated palette, source line. Type = neutral grotesque SANS, small (**Archivo**) + a mono for readouts; NEVER serif, NEVER giant display, never Fraunces/Inter/Space Grotesk/Hanken/IBM Plex. Borrow-recipe zones: Stefaner = frame · Bremer = hero mark (glow) · Lupi = legend/key.
+Memories to consult: `dustin-brand-anchor`, `dustincoledata-design-direction`, `design-canon-visual-cinnamon`, `dustin-dataviz-borrow-recipe`, `design-anchor-before-mocks`, `design-first-on-visual-projects`, `namesake-project` (proof standard + repo/deploy pattern), `gsap-scrub-from-conflict`.
+
+**Skills to consult:** `/prototype` + Impeccable (the hero look), `/grilling` + `/domain-modeling` (decisions), `/research` (AFK reads), Intent (exhibit UX / on-ramp / a11y).
+
+**Domain vocabulary:** *exhibit* · *shell* · *engine* · *stage* (the dark canvas) · *signature plot* (the sim-data readout) · *on-ramp / beat* (scripted show-don't-tell step) · *sandbox* (free play) · *click-to-act*. Fire: *cell · tree · density d · spark/ignition · spread · von-Neumann neighbor · burned/scar · percolation threshold d\_c≈0.59 · spanning cluster · fraction-burned*. Sandpile: *grain · topple · critical slope · avalanche · power law*. Network: *node · edge · load · capacity · tolerance α · knock-out · cascade · heavy tail*.
+
+**Home:** map + tickets here (`.scratch/cascade/`); provisional locked spec at `.claude/plans/2026-07-23-cascade-design.md`; final spec stays there. Work via `/wayfinder`.
+
+## Decisions so far
+
+<!-- one line per closed ticket: gist + link; the ticket holds the detail -->
+
+- **Strategy & structure LOCKED (via brainstorm→spec, 2026-07-23)** → [.claude/plans/2026-07-23-cascade-design.md](../../.claude/plans/2026-07-23-cascade-design.md). Four forks resolved with Dustin: (1) **register = dark instrument stage** (own brand, not dcd-light — glow's natural home); (2) **architecture = hub + spoke + coda** (landing → 3 exhibit routes → synthesis); (3) **data-art payoff = YES** — each exhibit = live sim + a signature plot built from the sim's own data (fire = fraction-burned-vs-density S-curve, knee ≈0.59; sandpile = power-law histogram; network = cascade heavy-tail); (4) **name = Cascade**. Exhibit mechanics, on-ramp shape, build phases, and deploy pattern captured in the spec. **The spec is PROVISIONAL pending the hero-look prototype** (design-first — the look is the hero; the spec's §1 palette/§4.4 plot are the parts the prototype locks). — *resolved by ticket 01 ↓; spec §1/§4.4 now LOCKED.*
+- **Hero-look LOCKED (ticket 01, 2026-07-23)** → [assets/01-forest-fire-look.html](assets/01-forest-fire-look.html) (2-direction study: [assets/01-forest-fire-look-study.html](assets/01-forest-fire-look-study.html)). Dustin picked the **graft: Direction B's stage bloom (glow is the hero) inside Direction A's framed chrome + rigorous scientific signature plot** (real scatter + smoothed mean curve + faint gridlines; knee annotated OFF the line with a leader; live density marker cyan<d_c→amber). Fold-ins settled: §1.2 palette **CVD-validated, hexes kept** (alive-teal↔event-orange worst adjacent ΔE **8.8** protan ≥ 8.0; warm front is a *sequential* spectral, not categorical; state also carried by luminance — dim forest · bright fire · near-black scar); mono = **JetBrains Mono**; **60fps confirmed** — canvas-2D repaints only the ~125-cell moving front (**1.66 ms/tick @160²**), whole-grid repaint 38 ms one-time on density change, **no WebGL** even at the spec's top grid. Frame + plot are real seeded sim data (mulberry32 CA + Monte-Carlo). Fed back into spec §1 + §4.4.
+- **On-ramp choreography LOCKED (ticket 02, 2026-07-23)** → [issues/02-on-ramp-choreography.md](issues/02-on-ramp-choreography.md). Resolved via HITL `/grilling` + Intent on-ramp lens; 12 decisions locked, designed ON the real stage. **Spine = plant a linear expectation then shatter it** (aha = *"cliffs, not ramps,"* felt in the fingertips; beat 2 is the trap). **User-acts every beat**; beat 1 taps a tree to fix the spark, beats 2–3 drag density. **Monotonic fill** (`r_i < d`, add-only, fixed spark) makes "same spark, one more tree" literally true (new engine constraint → spec §4.1/§4.3). **The knee lights up in sync with the beat-3 crossing** (marker cyan→amber at the exact d_c pixel; plot builds from the user's 3 real trials, curve+annotation resolve at the crossing). Slim caption strip above the frame; skip + `localStorage` re-entry; Play/Speed only in the sandbox. Fed back into spec §4.2 (rewritten) + §4.1/§4.3.
+- **Synthesis coda — first panel LOCKED (ticket 03, 2026-07-24)** → [issues/03-synthesis-coda-first-panel.md](issues/03-synthesis-coda-first-panel.md). Resolved via HITL `/grilling` + Intent; 12 decisions. **Spine = bridge the felt-personal → the named-universal:** the coda plays the **opposite register to the exhibit** — a calm, hero-scale instrument readout where the signature plot leads (no stage) — *names* **threshold**, and places it as one of three ways. **One re-feel** keeps the cliff tactile: dragging the marker across the knee makes the **y-readout leap** (Δx→huge Δy = "cliffs not ramps" enacted on the instrument), flips it cyan→amber, floods the catastrophe regime warm — **plot-only, no sim**. Plot = **canonical baked S-curve** + optional `★ your run` tick (localStorage, graceful absent). Copy = 4 tight lines (`THRESHOLD` / plain line / "cliffs, not ramps" / "an epidemic past R=1"). **Clean degrade:** solo = header + panel + one promise line, **no ghost cards**; panel built as a **board-slot** that reflows to the 3-up rhyme board when panels 2 & 3 land. Establishes the **rhyme grammar** (shared framing/annotation/cool-safe-warm-catastrophe, true shapes). Fed back into spec §6 (rewrite), §4.4 (coda-config), §3.2 (4th plot config).
+
+## Not yet specified (frontier + fog)
+
+- ✅ ~~On-ramp choreography~~ — **LOCKED** (ticket 02 ↑); the 3 forest-fire beats are choreographed on the real stage.
+- ✅ ~~Synthesis coda — first panel~~ — **LOCKED** (ticket 03 ↑); the forest-fire coda panel (threshold → the knee) + the rhyme grammar + the board-slot contract are designed.
+- **🏁 Forest-fire slice is now DESIGN-COMPLETE** (look ✓ · on-ramp ✓ · coda panel ✓, on the locked shell/spec) → **ready to hand to a BUILD session** (spec §9 Phases 1–4). The remaining frontier is all gated behind forest-fire being *built + proven on the shell* (spec §9 phasing), so BUILD is the next move, not another design ticket.
+- **Coda — panels 2 & 3 + full board** *(fog; unblocks as ≥2 plots exist)* — the sandpile/network coda panels (fill the board-slot contract, ticket 03), the 3-up responsive board layout, and the `/forest-fire → /synthesis` arrival routing. Not designable until those plots exist.
+- **Sandpile exhibit specifics** — grain-feed UX, avalanche render, power-law plot detail; graduates after forest-fire is proven on the shell.
+- **Network exhibit specifics** — graph model/size, cascade render, heavy-tail plot; neutral grid; graduates last.
+- **Logo / favicon / share-OG** — "Cascade" name confirmed; visual identity mark deferred (Namesake pattern) until the look is anchored.
+
+## Out of scope
+
+- **Any server / cron / dataset / dynamic data** — violates FREE + LOW-upkeep + fully-in-browser. Everything computed client-side.
+- **WebGL by default** — canvas 2D unless profiling forces it on one exhibit.
+- **Political / social framing** — network stays a neutral power grid; no social-contagion/political cascade.
+- **>3 exhibits or per-exhibit bespoke chrome** — exhibits are rule-sets on the one shell; more is a future effort, not this destination.
+- **Building the app** — plan-don't-build; the BUILD session executes the spec.
