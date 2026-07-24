@@ -6,30 +6,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <section class="page">
     <p class="kicker">Cascade</p>
     <h1>One small thing, enormous consequences.</h1>
-    <p class="lede">Probe: the stage. The real landing lands in Task 8.</p>
-    <div class="panel stage" style="max-width:760px;margin-top:24px">
-      <canvas id="probe-stage"></canvas>
-    </div>
+    <p class="lede">The real landing lands in Task 8.</p>
+    <p style="margin-top:20px"><a href="/forest-fire">→ Forest fire</a></p>
   </section>
 </BaseLayout>
-
-<script>
-  import { buildField, burn, largestClusterSpark } from '../lib/forest-fire.ts';
-  import { createStage } from '../scripts/stage.ts';
-
-  const canvas = document.getElementById('probe-stage') as HTMLCanvasElement;
-  const W = 128;
-  const H = 82;
-  const d = 0.62;
-  const field = buildField(W, H, 0x0ca5cade);
-  const b = burn(field, d, largestClusterSpark(field, d));
-  const stage = createStage(canvas, W, H);
-  const tick = Math.round(b.maxTick * 0.5);
-  stage.paintAll(field, d, b, tick);
-  stage.paintFrame(field, b, tick, 0);
-
-  const front = b.buckets.slice(Math.max(0, tick - stage.bandFor(b) + 1), tick + 1).flat().length;
-  const t0 = performance.now();
-  for (let k = 0; k < 120; k++) stage.paintFrame(field, b, tick, k * 16);
-  console.log(`front cells ${front} · ms/frame ${((performance.now() - t0) / 120).toFixed(2)}`);
-</script>

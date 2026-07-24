@@ -1,0 +1,37 @@
+---
+interface Props {
+  startD: number;
+}
+const { startD } = Astro.props;
+---
+
+<div class="controls">
+  <div class="ctl" data-control="density">
+    <label for="density">density</label>
+    <input
+      type="range"
+      class="density"
+      id="density"
+      min="0.30"
+      max="0.86"
+      step="0.001"
+      value={startD}
+      aria-label="tree density"
+      aria-describedby="density-readout"
+    />
+    <span class="val dval" id="density-readout">{startD.toFixed(3)}</span>
+  </div>
+  <button class="ctl-btn spark" data-act="spark" type="button">✦ Spark</button>
+  <button class="ctl-btn" data-act="play" data-sandbox-only type="button">▷ Play</button>
+  <div class="ctl" data-sandbox-only>
+    <label for="speed">speed</label>
+    <input type="range" class="speed" id="speed" min="0.3" max="2" step="0.1" value="1" aria-label="speed" />
+  </div>
+  <button class="ctl-btn" data-act="shuffle" type="button">⤫ Shuffle</button>
+  <button class="ctl-btn" data-act="reset" type="button">↺ Reset</button>
+  <div class="spacer"></div>
+  <div class="readout">
+    <span class="r">swept <b class="sweptval" aria-live="polite">—</b></span>
+    <span class="r">seed <b class="seedval">—</b></span>
+  </div>
+</div>

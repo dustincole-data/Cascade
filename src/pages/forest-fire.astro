@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Instrument from '../components/Instrument.astro';
+---
+
+<BaseLayout
+  title="Forest fire · Cascade"
+  description="Below a line a spark fizzles. A hair past it, the same spark takes everything."
+>
+  <section class="page">
+    <p class="kicker">Cascade · 01 · threshold</p>
+    <Instrument title="Forest fire" sci="percolation · von-Neumann spread" startD={0.4} showCurve={true} />
+  </section>
+</BaseLayout>
+
+<script>
+  import { createExhibit } from '../scripts/exhibit.ts';
+
+  const root = document.getElementById('instrument');
+  if (root) createExhibit(root, { grid: { W: 128, H: 82 }, seed: 0x0ca5cade, startD: 0.4 });
+</script>

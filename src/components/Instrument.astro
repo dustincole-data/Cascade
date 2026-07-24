@@ -1,0 +1,46 @@
+---
+import ControlBar from './ControlBar.astro';
+import SignaturePlot from './SignaturePlot.astro';
+
+interface Props {
+  title: string;
+  sci: string;
+  startD: number;
+  showCurve: boolean;
+}
+const { title, sci, startD, showCurve } = Astro.props;
+---
+
+<section class="instrument" id="instrument">
+  <div class="inst-head">
+    <div class="inst-title">
+      <h2>{title}</h2>
+      <span class="sci">{sci}</span>
+    </div>
+  </div>
+  <div class="divider"></div>
+  <div class="panels">
+    <div class="panel stage" data-spot="stage">
+      <span class="panel-tag">stage</span>
+      <canvas
+        id="stage"
+        tabindex="0"
+        role="application"
+        aria-label="Forest stage. Click a tree, or press Enter, to spark it."></canvas>
+    </div>
+    <div class="panel plot">
+      <span class="panel-tag">signature</span>
+      <SignaturePlot
+        id="plot"
+        mode="exhibit"
+        width={460}
+        height={430}
+        showCurve={showCurve}
+        showScatter={false}
+        markerD={startD}
+        annotation={{ title: 'd_c ≈ 0.59', sub: ['the same spark', 'now takes everything'] }}
+      />
+    </div>
+  </div>
+  <ControlBar startD={startD} />
+</section>

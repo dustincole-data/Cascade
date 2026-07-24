@@ -498,3 +498,23 @@ button.ctl-btn.spark:hover {
 .sigplot--coda .sp-anno-title {
   font-size: 13px;
 }
+
+/* ── Beat spotlight: the live control is full strength, everything else recedes ── */
+[data-sandbox-only][hidden] {
+  display: none;
+}
+
+.instrument[data-spotlight] .controls .ctl,
+.instrument[data-spotlight] .controls .ctl-btn {
+  opacity: 0.34;
+  transition: opacity 220ms ease;
+}
+
+.instrument[data-spotlight='density'] .controls [data-control='density'],
+.instrument[data-spotlight='stage'] .controls [data-act='spark'] {
+  opacity: 1;
+}
+
+.instrument[data-spotlight='stage'] .panel.stage {
+  box-shadow: inset 0 0 0 1px rgba(76, 201, 240, 0.28);
+}
