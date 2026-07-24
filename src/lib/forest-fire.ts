@@ -1,4 +1,4 @@
-import { mulberry32 } from './prng';
+import { mulberry32 } from './prng.ts';
 
 /** Site-percolation threshold, 2D square lattice. Displayed as 0.59. */
 export const D_C = 0.5927;
