@@ -49,7 +49,7 @@ Memories to consult: `dustin-brand-anchor`, `dustincoledata-design-direction`, `
 - ✅ ~~Synthesis coda: panel 2 + the 2-up board~~ — **LOCKED** (ticket 06 ↑); the re-feel, the widening board, and the board-level contrast line are designed.
 - **🏁 Exhibit 2 (sandpile) is BUILT + LIVE** at [cascade.dustincoledata.com/sandpile](https://cascade.dustincoledata.com/sandpile) (2026-07-24; spec §9 Phase 5) — instrument + on-ramp + coda panel 2 + the 2-up board + the landing's second door, 89 tests green, acceptance evidence (and 7 flagged deviations from the tickets) in [PROGRESS.md](../../PROGRESS.md). The shell's stage renderer and beat runner are now shared seams, so exhibit 3 is a rule-set on proven machinery.
 - ✅ ~~Network exhibit specifics~~ · ✅ ~~Coda panel 3 + the full 3-up board~~ · ✅ ~~`/exhibit → /synthesis` arrival routing~~ — all **LOCKED** (ticket 07 ↑) and built in the same session.
-- **[FRONTIER] Logo / favicon / share-OG** — the last unowned patch. "Cascade" name confirmed; visual identity mark deferred (Namesake pattern) until the look is anchored — the look is now anchored *and shipped across three exhibits*, so this is takeable.
+- ✅ ~~Logo / favicon / share-OG~~ — **DONE + LIVE (2026-07-24, commit `7955c91`).** The mark = the **branching cascade**: one small cool teal seed forks into an enormous warm bloom (amber→orange→hotcore) — the trio's shared idea made literal in the stage palette+glow. `public/favicon.svg` (SVG mark) · `public/apple-touch-icon.png` (180², wired into BaseLayout) · `public/og.png` (1200×630 designed share card = wordmark + thesis + the three signature-plot shapes, replacing the raw forest-fire screenshot). **The wayfinder map is now fully resolved — Cascade is 100% complete.**
 
 ## Out of scope
 
