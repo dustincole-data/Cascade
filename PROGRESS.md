@@ -9,7 +9,7 @@ Plan being executed: [2026-07-24-cascade-forest-fire-build.md](.claude/plans/202
 - [x] **Phase 1 — Shell.** Astro static scaffold, deploy config, locked palette + type tokens, instrument chrome, control bar, seed/reset, a11y plumbing, reusable signature plot.
 - [x] **Phase 2 — Exhibit 1 end-to-end.** Percolation core (tested), canvas stage, live signature plot, 3-beat on-ramp, free sandbox. §4.5 acceptance met and verified in-browser at every step.
 - [x] **Phase 3 — Landing + synthesis coda.** Landing frames the thesis with one live door; `/synthesis` panel 1 built as a board-slot.
-- [ ] **Phase 4 — Ship.** Awaiting Dustin's go on: create `github.com/dustincole-data/Cascade`, push, Vercel project (Node 22, static), CNAME `cascade`, live-verify.
+- [~] **Phase 4 — Ship** (2026-07-24). Done: repo [`dustincole-data/Cascade`](https://github.com/dustincole-data/Cascade) created public, all commits pushed; Vercel project `cascade` created and **GitHub-connected** (a push to `main` builds automatically — proven, 15s build, Ready); domain `cascade.dustincoledata.com` added to the project. **Remaining — one manual step:** add the DNS record at Namecheap (see below). Until then the site is not publicly reachable.
 - [ ] **Phase 5 — Graduate exhibits 2 & 3** (sandpile, then network) as new rule-sets on the proven shell. Not started.
 
 ## Acceptance evidence (§4.5, verified live — not assumed)
@@ -49,4 +49,16 @@ Plan being executed: [2026-07-24-cascade-forest-fire-build.md](.claude/plans/202
 
 ## Open
 
+- **DNS (blocking the public launch).** `dustincoledata.com` runs on Namecheap nameservers (`dns1/dns2.registrar-servers.com`), not Vercel's, so Vercel's own DNS panel is not authoritative. Add at Namecheap:
+
+  | Type | Host | Value |
+  |---|---|---|
+  | CNAME | `cascade` | `36ca4220b061ecc3.vercel-dns-017.com.` |
+
+  This is the same pattern `moves` already uses (`d90d5b329ae0d868.vercel-dns-017.com`). Then `vercel domains verify cascade.dustincoledata.com`. If the certificate stalls, remove and re-add the domain.
 - Add a Cascade `<ProjectCard external>` to dustincoledata.com `/projects` (spec §7 — out of scope for this repo; note for a site session).
+
+## Deploy notes
+
+- **Node 24.x, not the spec's 22.** Vercel's current default, and what every other dustincoledata project runs. Newer and supported; no reason to pin backwards.
+- **Deployment protection is on for `*.vercel.app` URLs** — they redirect to a Vercel login, and `curl` sees a **200 for the login page**, so a status code alone proves nothing there. Production custom domains bypass it (verified against the live `moves.dustincoledata.com`).
