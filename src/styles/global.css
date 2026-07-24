@@ -349,3 +349,152 @@ button.ctl-btn.spark:hover {
   top: 12px;
   z-index: 50;
 }
+
+/* ============================================================================
+   Signature plot (spec §4.4 — LOCKED treatment: faint real scatter + smoothed
+   spectral mean curve + faint gridlines + annotation OFF the line with a thin
+   leader + hot-core knee dot. No area fill, no glow curve — it stays an
+   instrument.) Values ported from the look reference's renderPlot().
+   ============================================================================ */
+.sigplot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sp-grid line {
+  stroke: #232a35;
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.sp-axis text {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: #6b7482;
+}
+
+.sp-axis .sp-axis-title {
+  fill: var(--ink-muted);
+}
+
+.sp-scatter circle {
+  fill: rgba(255, 138, 61, 0.13);
+}
+
+.sp-trials circle {
+  fill: rgba(255, 209, 102, 0.55);
+}
+
+.sp-curve {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.sp-knee-hair {
+  stroke: rgba(201, 209, 217, 0.28);
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+.sp-knee-dot {
+  fill: var(--hotcore);
+}
+
+.sp-leader {
+  stroke: rgba(201, 209, 217, 0.4);
+  stroke-width: 1;
+}
+
+.sp-anno-title {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 11.5px;
+  fill: #e8eef4;
+}
+
+.sp-anno-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  fill: var(--ink-muted);
+}
+
+.sp-source {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  fill: #4b5563;
+}
+
+/* The signature (curve + knee + annotation) is withheld during the on-ramp. */
+.sp-signature {
+  transition: opacity 420ms ease;
+}
+
+.sp-signature[data-hidden='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Live density marker — cyan below d_c, amber at/above. */
+.sp-marker-line {
+  stroke: rgba(76, 201, 240, 0.55);
+  stroke-width: 1.5;
+}
+
+.sp-marker-dot {
+  fill: var(--focus);
+}
+
+.sp-marker[data-past='true'] .sp-marker-line {
+  stroke: rgba(255, 138, 61, 0.7);
+}
+
+.sp-marker[data-past='true'] .sp-marker-dot {
+  fill: var(--amber);
+}
+
+.sp-readout {
+  font-family: var(--mono);
+  font-size: 11px;
+  fill: var(--ink-muted);
+}
+
+.sp-marker[data-past='true'] .sp-readout {
+  fill: var(--amber);
+}
+
+/* Catastrophe regime — coda only, revealed on crossing. */
+.sp-catastrophe {
+  fill: rgba(255, 138, 61, 0.07);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.sigplot--coda .sp-catastrophe[data-on='true'] {
+  opacity: 1;
+}
+
+.sp-yourrun {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--teal-bright);
+}
+
+.sp-yourrun[data-hidden='true'] {
+  display: none;
+}
+
+/* Coda hero scale: the plot is the largest bright object on the panel. */
+.sigplot--coda .sp-axis text {
+  font-size: 12px;
+}
+
+.sigplot--coda .sp-curve {
+  stroke-width: 2.6;
+}
+
+.sigplot--coda .sp-anno-title {
+  font-size: 13px;
+}

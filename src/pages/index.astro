@@ -1,11 +1,22 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SignaturePlot from '../components/SignaturePlot.astro';
 ---
 
 <BaseLayout title="Cascade" description="One small thing, enormous consequences.">
   <section class="page">
     <p class="kicker">Cascade</p>
     <h1>One small thing, enormous consequences.</h1>
-    <p class="lede">Scaffold live. The forest fire lands in Task 8.</p>
+    <p class="lede">Probe: the signature plot. The real landing lands in Task 8.</p>
+    <div style="max-width:760px;margin-top:24px">
+      <SignaturePlot
+        id="probe"
+        mode="coda"
+        width={760}
+        height={460}
+        annotation={{ title: 'threshold · d_c ≈ 0.59' }}
+        markerD={0.5}
+      />
+    </div>
   </section>
 </BaseLayout>
