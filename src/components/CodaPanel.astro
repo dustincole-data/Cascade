@@ -1,0 +1,31 @@
+---
+import SignaturePlot from './SignaturePlot.astro';
+
+interface Props {
+  concept: string;
+  plain: string;
+  felt: string;
+  echo: string;
+}
+const { concept, plain, felt, echo } = Astro.props;
+---
+
+<article class="coda-panel">
+  <p class="coda-concept">{concept}</p>
+  <div class="coda-plot">
+    <SignaturePlot
+      id="coda-plot"
+      mode="coda"
+      width={860}
+      height={500}
+      showCurve={true}
+      showScatter={true}
+      markerD={0.55}
+      annotation={{ title: 'threshold · d_c ≈ 0.59' }}
+    />
+  </div>
+  <p class="coda-hint" data-js-only>drag the marker across the knee</p>
+  <p class="coda-plain">{plain}</p>
+  <p class="coda-felt">{felt}</p>
+  <p class="coda-echo">{echo}</p>
+</article>

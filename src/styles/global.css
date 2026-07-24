@@ -711,3 +711,96 @@ button.ctl-btn.spark:hover {
   font-size: 11px;
   color: var(--ink-faint);
 }
+
+/* ============================================================================
+   Synthesis coda — the OPPOSITE register to the exhibit (ticket 03, dec. 1):
+   calm, still, hero-scale instrument readout. The calm IS the point; it reads
+   as reflection, not repetition. The plot leads — there is no stage here.
+   ============================================================================ */
+.coda {
+  max-width: 960px;
+  padding-top: 64px;
+}
+
+.coda h1 {
+  margin-bottom: 40px;
+}
+
+/* Reflows to the 3-up rhyme board when panels 2 and 3 land (board-slot). */
+.coda-board {
+  display: grid;
+  gap: 40px;
+}
+
+@media (min-width: 1200px) {
+  .coda-board[data-panels='3'] {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.coda-panel {
+  background: var(--chrome);
+  border: 1px solid var(--chrome-line);
+  border-radius: var(--r);
+  padding: 26px 28px 24px;
+}
+
+.coda-concept {
+  margin: 0 0 18px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.coda-plot {
+  margin: 0 0 8px;
+}
+
+.coda-plot .sigplot {
+  cursor: default;
+}
+
+.coda-plot .sigplot.is-interactive {
+  cursor: ew-resize;
+}
+
+/* No JS ⇒ no promise of an interaction that isn't there. */
+.coda-hint {
+  margin: 0 0 22px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  display: none;
+}
+
+.coda-hint[data-js-on='true'] {
+  display: block;
+}
+
+.coda-plain {
+  margin: 0 0 6px;
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.coda-felt {
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.coda-echo {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.sigplot:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}

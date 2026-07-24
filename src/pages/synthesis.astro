@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CodaPanel from '../components/CodaPanel.astro';
+---
+
+<BaseLayout
+  title="Synthesis · Cascade"
+  description="One small thing, enormous consequences — three ways the world does it."
+>
+  <section class="page coda">
+    <p class="kicker">Cascade · synthesis</p>
+    <h1>One small thing, enormous consequences — three ways the world does it.</h1>
+
+    <div class="coda-board" data-panels="1">
+      <CodaPanel
+        concept="THRESHOLD"
+        plain="Cross a line and the same spark changes everything."
+        felt="Cliffs, not ramps."
+        echo="An epidemic past R = 1."
+      />
+    </div>
+
+    <p class="promise">criticality and cascade — the next two exhibits.</p>
+  </section>
+</BaseLayout>
+
+<script>
+  import { attachCoda } from '../scripts/coda.ts';
+  attachCoda();
+</script>
