@@ -518,3 +518,119 @@ button.ctl-btn.spark:hover {
 .instrument[data-spotlight='stage'] .panel.stage {
   box-shadow: inset 0 0 0 1px rgba(76, 201, 240, 0.28);
 }
+
+/* ============================================================================
+   On-ramp caption strip — ABOVE the instrument frame, never overlaid on the
+   stage (ticket 02, dec. 8: chrome never competes with the glow). The payoff
+   lands via the stage sweeping + the knee blooming; the words stay small.
+   ============================================================================ */
+.caption-strip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 2px 14px;
+}
+
+.cap-lesson {
+  margin: 0 0 3px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  min-height: 20px;
+}
+
+.cap-prompt {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.cap-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.cap-progress {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.14em;
+}
+
+.cap-progress b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.cap-skip,
+.cap-next {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 2px;
+}
+
+.cap-skip:hover,
+.cap-next:hover {
+  color: var(--ink);
+}
+
+/* The knee-tick that invites "one more nudge" (beat 3). */
+.ctl[data-control='density'] {
+  position: relative;
+}
+
+.knee-tick {
+  position: absolute;
+  width: 2px;
+  height: 14px;
+  border-radius: 1px;
+  background: var(--amber);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.knee-tick[data-on='true'] {
+  opacity: 1;
+  animation: kneepulse 1.4s ease-in-out infinite;
+}
+
+@keyframes kneepulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knee-tick[data-on='true'] {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* Hand-off to the coda. */
+.handoff {
+  margin: 26px 2px 0;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.handoff a {
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.handoff a:hover {
+  color: var(--amber);
+}

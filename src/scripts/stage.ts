@@ -102,9 +102,11 @@ export function createStage(canvas: HTMLCanvasElement, W: number, H: number): St
     for (let i = 0; i < W * H; i++) {
       if (!isTree(field, i, d)) continue;
       const t = burn ? burn.ig[i]! : -1;
-      if (t >= 0 && t <= tick - band) paintScar(i, field);
-      else if (t < 0 || t > tick) paintTree(i, field);
-      // cells inside the band are drawn by paintFrame, not baked into the bg
+      if (t < 0 || t > tick) paintTree(i, field);
+      // Cells inside the glowing band get their scar painted here too, then
+      // paintFrame overdraws them with glow. Without this they'd be holes in
+      // any frame where paintFrame doesn't follow (idle, tab-restore, resize).
+      else paintScar(i, field);
     }
     ctx.clearRect(0, 0, W * cell, H * cell);
     ctx.drawImage(bg, 0, 0, W * cell, H * cell);

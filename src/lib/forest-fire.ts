@@ -39,10 +39,20 @@ export function countTrees(f: Field, d: number): number {
   return n;
 }
 
-/** Snap a tap to the nearest tree by expanding rings. -1 if the forest is empty. */
-export function nearestTree(f: Field, d: number, x: number, y: number): number {
+/**
+ * Snap a tap to the nearest tree satisfying `ok`, by expanding rings.
+ * -1 if nothing qualifies.
+ */
+export function nearestTreeWhere(
+  f: Field,
+  d: number,
+  x: number,
+  y: number,
+  ok: (i: number) => boolean,
+): number {
   const { W, H } = f;
-  if (x >= 0 && x < W && y >= 0 && y < H && isTree(f, y * W + x, d)) return y * W + x;
+  const qualifies = (i: number) => isTree(f, i, d) && ok(i);
+  if (x >= 0 && x < W && y >= 0 && y < H && qualifies(y * W + x)) return y * W + x;
   const maxR = Math.max(W, H);
   for (let r = 1; r <= maxR; r++) {
     for (let dy = -r; dy <= r; dy++) {
@@ -52,11 +62,69 @@ export function nearestTree(f: Field, d: number, x: number, y: number): number {
         const ny = y + dy;
         if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
         const i = ny * W + nx;
-        if (isTree(f, i, d)) return i;
+        if (qualifies(i)) return i;
       }
     }
   }
   return -1;
+}
+
+/** Snap a tap to the nearest tree by expanding rings. -1 if the forest is empty. */
+export const nearestTree = (f: Field, d: number, x: number, y: number): number =>
+  nearestTreeWhere(f, d, x, y, () => true);
+
+/**
+ * Membership mask for the largest connected cluster at density `d`.
+ *
+ * The on-ramp needs this: beat 1 lets the user tap anywhere, but beats 2–3
+ * promise that *that same spark* sweeps the forest once density passes d_c. A
+ * tap that lands in an isolated pocket would never join the spanning cluster
+ * and the locked choreography would break. Snapping the tap to the nearest tree
+ * that IS in the d≈0.62 spanning cluster keeps the user's choice of place, keeps
+ * the spark cell fixed and deterministic, and makes the promise reliable.
+ * The free sandbox does NOT restrict sparks — any tree, honest outcome.
+ */
+export function largestClusterMask(f: Field, d: number): Uint8Array {
+  const { W, H } = f;
+  const N = W * H;
+  const label = new Int32Array(N).fill(-1);
+  const stack: number[] = [];
+  let best: number[] = [];
+
+  for (let i = 0; i < N; i++) {
+    if (!isTree(f, i, d) || label[i]! >= 0) continue;
+    const members: number[] = [];
+    stack.length = 0;
+    stack.push(i);
+    label[i] = i;
+    while (stack.length) {
+      const idx = stack.pop()!;
+      members.push(idx);
+      const x = idx % W;
+      const y = (idx / W) | 0;
+      if (x > 0 && label[idx - 1]! < 0 && isTree(f, idx - 1, d)) {
+        label[idx - 1] = i;
+        stack.push(idx - 1);
+      }
+      if (x < W - 1 && label[idx + 1]! < 0 && isTree(f, idx + 1, d)) {
+        label[idx + 1] = i;
+        stack.push(idx + 1);
+      }
+      if (y > 0 && label[idx - W]! < 0 && isTree(f, idx - W, d)) {
+        label[idx - W] = i;
+        stack.push(idx - W);
+      }
+      if (y < H - 1 && label[idx + W]! < 0 && isTree(f, idx + W, d)) {
+        label[idx + W] = i;
+        stack.push(idx + W);
+      }
+    }
+    if (members.length > best.length) best = members;
+  }
+
+  const mask = new Uint8Array(N);
+  for (const i of best) mask[i] = 1;
+  return mask;
 }
 
 export interface Burn {

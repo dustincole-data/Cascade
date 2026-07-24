@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CaptionStrip from '../components/CaptionStrip.astro';
 import Instrument from '../components/Instrument.astro';
 ---
 
@@ -8,14 +9,44 @@ import Instrument from '../components/Instrument.astro';
   description="Below a line a spark fizzles. A hair past it, the same spark takes everything."
 >
   <section class="page">
-    <p class="kicker">Cascade · 01 · threshold</p>
-    <Instrument title="Forest fire" sci="percolation · von-Neumann spread" startD={0.4} showCurve={true} />
+    <p class="kicker">Cascade · 01</p>
+    <CaptionStrip />
+    <Instrument title="Forest fire" sci="percolation · von-Neumann spread" startD={0.4} showCurve={false} />
+    <p class="handoff"><a href="/synthesis">next: what you just felt, named →</a></p>
   </section>
 </BaseLayout>
 
 <script>
   import { createExhibit } from '../scripts/exhibit.ts';
+  import { runOnRamp, onRampComplete } from '../scripts/beats.ts';
+  import { SANDBOX_PROMPT, SKIP_D } from '../lib/beats-config.ts';
 
   const root = document.getElementById('instrument');
-  if (root) createExhibit(root, { grid: { W: 128, H: 82 }, seed: 0x0ca5cade, startD: 0.4 });
+  const strip = document.getElementById('caption');
+
+  if (root && strip) {
+    const returning = onRampComplete();
+    const ex = createExhibit(root, {
+      grid: { W: 128, H: 82 },
+      seed: 0x0ca5cade,
+      startD: returning ? SKIP_D : 0.4,
+    });
+
+    if (returning) {
+      // Repeat visits open in the sandbox with a quiet replay affordance.
+      ex.setControlsMode('sandbox');
+      ex.plot.revealCurve();
+      strip.dataset.beat = 'sandbox';
+      strip.querySelector('.cap-lesson')!.textContent = '';
+      strip.querySelector('.cap-prompt')!.textContent = SANDBOX_PROMPT;
+      const replay = strip.querySelector('.cap-skip') as HTMLButtonElement;
+      replay.textContent = '▷ replay intro';
+      replay.addEventListener('click', () => {
+        localStorage.removeItem('cascade.ff.onramp');
+        location.reload();
+      });
+    } else {
+      runOnRamp(root, ex, strip);
+    }
+  }
 </script>

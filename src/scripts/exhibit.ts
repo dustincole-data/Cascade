@@ -1,4 +1,13 @@
-import { buildField, burn, largestClusterSpark, nearestTree, type Burn, type Field } from '../lib/forest-fire.ts';
+import {
+  buildField,
+  burn,
+  largestClusterMask,
+  largestClusterSpark,
+  nearestTree,
+  nearestTreeWhere,
+  type Burn,
+  type Field,
+} from '../lib/forest-fire.ts';
 import { attachPlot, type PlotHandle } from './plot.ts';
 import { createStage, type Stage } from './stage.ts';
 
@@ -15,6 +24,12 @@ export interface ExhibitHandle {
   setControlsMode(mode: 'onramp' | 'sandbox'): void;
   spotlight(which: 'stage' | 'density' | 'none'): void;
   onTrial(cb: (d: number, frac: number) => void): void;
+  /**
+   * Restrict sparks to trees that join the spanning cluster at `atDensity`.
+   * The on-ramp sets this so beat 3's promised sweep is guaranteed; the free
+   * sandbox passes null and any tree is fair game.
+   */
+  setSparkConstraint(atDensity: number | null): void;
   plot: PlotHandle;
 }
 
@@ -44,6 +59,15 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
   let playing = false;
   const trialCbs: ((d: number, frac: number) => void)[] = [];
 
+  let constraintD: number | null = null;
+  let maskCache: Uint8Array | null = null;
+  function sparkOk(): (i: number) => boolean {
+    if (constraintD == null) return () => true;
+    if (!maskCache) maskCache = largestClusterMask(field, constraintD);
+    const mask = maskCache;
+    return (i) => mask[i] === 1;
+  }
+
   const showSeed = () => (seedVal.textContent = `0x${(seed >>> 0).toString(16).toUpperCase()}`);
 
   function stopLoop() {
@@ -67,7 +91,7 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     stopLoop();
     if (sparkCell >= 0 && !(field.r[sparkCell]! < density)) {
       // The fixed spark's cell may not be a tree at a lower density — snap out.
-      sparkCell = nearestTree(field, density, sparkCell % W, Math.floor(sparkCell / W));
+      sparkCell = nearestTreeWhere(field, density, sparkCell % W, Math.floor(sparkCell / W), sparkOk());
     }
     result = burn(field, density, sparkCell);
     tick = 0;
@@ -135,25 +159,33 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
   canvas.addEventListener('click', (e) => {
     const c = stage.cellAt(e.clientX, e.clientY);
     if (!c) return;
-    const t = nearestTree(field, density, c.x, c.y); // an empty tap snaps to a tree
+    const t = nearestTreeWhere(field, density, c.x, c.y, sparkOk()); // an empty tap snaps to a tree
     if (t >= 0) sparkAt(t);
   });
 
   canvas.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     e.preventDefault();
-    const t = largestClusterSpark(field, density);
+    const t =
+      constraintD == null
+        ? largestClusterSpark(field, density)
+        : nearestTreeWhere(field, density, W >> 1, H >> 1, sparkOk());
     if (t >= 0) sparkAt(t);
   });
 
   root.querySelector('[data-act=spark]')!.addEventListener('click', () => {
-    const t = sparkCell >= 0 ? sparkCell : largestClusterSpark(field, density);
+    if (sparkCell >= 0) return sparkAt(sparkCell);
+    const t =
+      constraintD == null
+        ? largestClusterSpark(field, density)
+        : nearestTreeWhere(field, density, W >> 1, H >> 1, sparkOk());
     if (t >= 0) sparkAt(t);
   });
 
   root.querySelector('[data-act=shuffle]')!.addEventListener('click', () => {
     seed = (seed + 0x9e37) >>> 0; // Shuffle is the ONLY re-randomiser
     field = buildField(W, H, seed);
+    maskCache = null;
     showSeed();
     sparkCell = -1;
     repaintIdle();
@@ -162,6 +194,7 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
   root.querySelector('[data-act=reset]')!.addEventListener('click', () => {
     seed = opts.seed;
     field = buildField(W, H, seed);
+    maskCache = null;
     showSeed();
     sparkCell = -1;
     playing = false;
@@ -180,7 +213,14 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) stopLoop();
+    if (document.hidden) {
+      stopLoop(); // never burn rAF in a background tab
+      return;
+    }
+    // Coming back: the loop was cut mid-burn, so repaint the current state
+    // rather than leaving whatever half-frame was on screen.
+    stage.paintAll(field, density, result, tick);
+    if (result && result.spark >= 0) stage.paintFrame(field, result, tick, 0);
   });
 
   let rt = 0;
@@ -194,8 +234,9 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
   });
 
   showSeed();
-  plot.setMarker(density);
-  repaintIdle();
+  // Sync the SSR'd slider/readout to the starting density — a returning visitor
+  // opens at the sandbox density, not the markup's on-ramp default.
+  setDensity(opts.startD);
 
   return {
     setDensity,
@@ -213,6 +254,10 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     },
     onTrial(cb) {
       trialCbs.push(cb);
+    },
+    setSparkConstraint(atDensity) {
+      constraintD = atDensity;
+      maskCache = null;
     },
   };
 }
