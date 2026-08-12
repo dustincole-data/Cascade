@@ -447,157 +447,6 @@ button.ctl-btn.spark:hover {
   }
 }
 
-/* ============================================================================
-   Phone. Everything above this point is a desk instrument driven by a mouse;
-   on a 393px screen every control measured under 44px and the sliders measured
-   3px tall. The rules below are the touch build: one control per row, 48px
-   targets, and type that survives at arm's length. The stage keeps the same
-   grid and the same physics — only the chrome around it changes.
-   ============================================================================ */
-@media (max-width: 700px) {
-  /* ── Control bar: rows, not a wrapped strip ── */
-  .controls {
-    gap: 10px 14px;
-    padding: 12px 14px 16px;
-  }
-
-  button.ctl-btn {
-    min-height: 48px;
-    flex: 1 1 auto;
-    justify-content: center;
-    padding: 0 14px;
-    font-size: 14px;
-    border-radius: 10px;
-  }
-
-  /* A slider owns its own full-width row — it cannot share with a button. */
-  .ctl {
-    flex: 1 0 100%;
-    gap: 12px;
-  }
-
-  .ctl input[type='range'] {
-    flex: 1 1 auto;
-    width: auto;
-    height: 48px;
-  }
-
-  .ctl label {
-    font-size: 12px;
-    flex: 0 0 auto;
-  }
-
-  .ctl .val {
-    font-size: 16px;
-    min-width: 52px;
-  }
-
-  /* The dial is decorative (nobody sets it) — it stays inline and small. */
-  .ctl[data-control='slope'] {
-    flex: 1 1 auto;
-  }
-
-  .spacer {
-    display: none;
-  }
-
-  .readout {
-    flex: 1 0 100%;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-
-  .readout .r {
-    font-size: 13px;
-  }
-
-  /* ── On-ramp caption: the tour nav was 22px tall and lost in the header ── */
-  .caption-strip {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding-bottom: 16px;
-  }
-
-  .cap-lesson {
-    font-size: 17px;
-  }
-
-  .cap-prompt {
-    font-size: 13px;
-  }
-
-  .cap-right {
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .cap-skip,
-  .cap-next {
-    min-height: 44px;
-    padding: 0 14px;
-    font-size: 13px;
-    border: 1px solid var(--chrome-line);
-    border-radius: 9px;
-    color: var(--ink-muted);
-  }
-
-  /* `next` is the only way through the tour — it reads as the primary action. */
-  .cap-next {
-    flex: 1 1 auto;
-    color: var(--ink);
-    border-color: #2b3342;
-    background: #171b23;
-  }
-
-  .cap-progress {
-    font-size: 12px;
-  }
-
-  /* ── Chrome type: 10–11.5px is a desktop-at-60cm size ── */
-  .panel-tag {
-    font-size: 11px;
-    top: 10px;
-    left: 12px;
-  }
-
-  .page-rail {
-    align-items: center;
-  }
-
-  .rail-link {
-    font-size: 13px;
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding-left: 12px;
-  }
-
-  .site-foot {
-    font-size: 12px;
-    align-items: center;
-  }
-
-  /* Navigation links are targets too — these were 15px tall lines of text. */
-  .handoff a,
-  .coda-backlinks a,
-  .site-foot .dcd-mark {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-  }
-
-  .handoff a,
-  .coda-backlinks a {
-    font-size: 14px;
-  }
-
-  .coda-backlinks {
-    flex-wrap: wrap;
-    gap: 4px 18px;
-  }
-}
-
 /* Reduced motion: no chrome transitions, no auto-play anywhere. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -1262,17 +1111,24 @@ button.ctl-btn.spark:hover {
 }
 
 /* The sandpile bar carries six controls and three readouts, so it runs a tighter
-   rhythm than the fire bar to stay on one line at desktop widths. */
-.instrument[data-phase] .controls {
-  gap: 16px;
-}
+   rhythm than the fire bar to stay on one line at desktop widths. Scoped above
+   the phone breakpoint for the same reason the panel rule below is: it carries
+   more specificity than the touch build's plain `.controls`, so unscoped it wins
+   anyway and reimposes desk spacing — which pushed beat 2's bar 4px past the
+   fold and held the speed slider at a 58px drag target. There is no "one line"
+   to protect on a phone. */
+@media (min-width: 701px) {
+  .instrument[data-phase] .controls {
+    gap: 16px;
+  }
 
-.instrument[data-phase] .readout {
-  gap: 14px;
-}
+  .instrument[data-phase] .readout {
+    gap: 14px;
+  }
 
-.instrument[data-phase] input[type='range'].speed {
-  width: 58px;
+  .instrument[data-phase] input[type='range'].speed {
+    width: 58px;
+  }
 }
 
 /* The sandpile's table is square, so its panel runs closer to square than the
@@ -1282,5 +1138,191 @@ button.ctl-btn.spark:hover {
 @media (min-width: 861px) {
   .instrument[data-phase] .panels {
     grid-template-columns: 1.15fr 1fr;
+  }
+}
+
+/* ============================================================================
+   Phone. Everything above this point is a desk instrument driven by a mouse;
+   on a 393px screen every control measured under 44px and the sliders measured
+   3px tall. The rules below are the touch build: one control per row, 48px
+   targets, and type that survives at arm's length. The stage keeps the same
+   grid and the same physics — only the chrome around it changes.
+
+   THIS BLOCK MUST STAY LAST. It carries no extra specificity, so any desk rule
+   declared after it silently wins: sitting mid-file it lost the whole caption
+   strip back to the 11px desk chrome (`next →` rendered as faint grey text)
+   while the handful of properties the desk rules never declare — min-height,
+   flex — came through, which is exactly why it read as "mostly applied".
+   ============================================================================ */
+@media (max-width: 700px) {
+  /* ── Instrument order: stage, controls, then the plot ──
+     Stacked, the 328px signature panel sat between the stage and the control
+     bar and pushed the bar to y=825 of an 852px screen — so a beat could say
+     "drag density" with the slider below the fold, and scrolling to it took the
+     caption and three quarters of the forest off screen. Nothing can be taught
+     that way. Ordered like this the whole loop — instruction, stage, control —
+     is one screen on all three exhibits, and the plot is a scroll away. */
+  .instrument {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panels {
+    display: contents;
+  }
+
+  .panel.stage {
+    order: 1;
+  }
+
+  .controls {
+    order: 2;
+  }
+
+  .panel.plot {
+    order: 3;
+    border-top: 1px solid var(--chrome-line);
+  }
+
+  /* ── Control bar: rows, not a wrapped strip ── */
+  .controls {
+    gap: 10px 14px;
+    padding: 12px 14px 16px;
+  }
+
+  button.ctl-btn {
+    min-height: 48px;
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 10px;
+  }
+
+  /* A slider owns its own full-width row — it cannot share with a button. */
+  .ctl {
+    flex: 1 0 100%;
+    gap: 12px;
+  }
+
+  .ctl input[type='range'] {
+    flex: 1 1 auto;
+    width: auto;
+    height: 48px;
+  }
+
+  .ctl label {
+    font-size: 12px;
+    flex: 0 0 auto;
+  }
+
+  .ctl .val {
+    font-size: 16px;
+    min-width: 52px;
+  }
+
+  /* The dial is decorative (nobody sets it) — it stays inline and small. */
+  .ctl[data-control='slope'] {
+    flex: 1 1 auto;
+  }
+
+  .spacer {
+    display: none;
+  }
+
+  .readout {
+    flex: 1 0 100%;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .readout .r {
+    font-size: 13px;
+  }
+
+  /* ── On-ramp caption: the tour nav was 22px tall and lost in the header ── */
+  .caption-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-bottom: 16px;
+  }
+
+  .cap-lesson {
+    font-size: 17px;
+  }
+
+  .cap-prompt {
+    font-size: 13px;
+  }
+
+  .cap-right {
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .cap-skip,
+  .cap-next {
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: 13px;
+    border: 1px solid var(--chrome-line);
+    border-radius: 9px;
+    color: var(--ink-muted);
+  }
+
+  /* `next` is the only way through the tour — it reads as the primary action. */
+  .cap-next {
+    flex: 1 1 auto;
+    color: var(--ink);
+    border-color: #2b3342;
+    background: #171b23;
+  }
+
+  .cap-progress {
+    font-size: 12px;
+  }
+
+  /* ── Chrome type: 10–11.5px is a desktop-at-60cm size ── */
+  .panel-tag {
+    font-size: 11px;
+    top: 10px;
+    left: 12px;
+  }
+
+  .page-rail {
+    align-items: center;
+  }
+
+  .rail-link {
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-left: 12px;
+  }
+
+  .site-foot {
+    font-size: 12px;
+    align-items: center;
+  }
+
+  /* Navigation links are targets too — these were 15px tall lines of text. */
+  .handoff a,
+  .coda-backlinks a,
+  .site-foot .dcd-mark {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .handoff a,
+  .coda-backlinks a {
+    font-size: 14px;
+  }
+
+  .coda-backlinks {
+    flex-wrap: wrap;
+    gap: 4px 18px;
   }
 }

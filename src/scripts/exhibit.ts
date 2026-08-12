@@ -29,7 +29,13 @@ export interface ExhibitHandle {
   sparkAt(i: number): void;
   setControlsMode(mode: 'onramp' | 'sandbox'): void;
   spotlight(which: 'stage' | 'density' | 'none'): void;
-  onTrial(cb: (d: number, frac: number) => void): void;
+  /**
+   * Ring a cell, or clear it. Beat 1's whole burn is a single 2.8px cell: without
+   * a ring the user cannot tell "a spark went nowhere" from "my tap missed", so
+   * the ring is what gives the lesson's *here* a place to point at.
+   */
+  showRing(cell: number | null): void;
+  onTrial(cb: (d: number, frac: number, cell: number) => void): void;
   /**
    * Restrict sparks to trees that join the spanning cluster at `atDensity`.
    * The on-ramp sets this so beat 3's promised sweep is guaranteed; the free
@@ -83,9 +89,10 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
 
   const stage: Stage = createStage(canvas, { W, H, bg: cellBg });
   const plot: PlotHandle = attachPlot(svg);
+  const ring = root.querySelector<HTMLElement>('.stage-ring');
   let raf = 0;
   let playing = false;
-  const trialCbs: ((d: number, frac: number) => void)[] = [];
+  const trialCbs: ((d: number, frac: number, cell: number) => void)[] = [];
 
   let constraintD: number | null = null;
   let maskCache: Uint8Array | null = null;
@@ -111,7 +118,24 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     sweptVal.textContent = sweptText(result.frac);
     plot.addTrial(density, result.frac);
     const frac = result.frac;
-    trialCbs.forEach((cb) => cb(density, frac));
+    const cell = result.spark;
+    trialCbs.forEach((cb) => cb(density, frac, cell));
+  }
+
+  /**
+   * Overlays are panel-relative but cell rects are canvas-relative, so the
+   * canvas offset goes back in. The size is floored: a cell is ~2.8px wide on a
+   * phone and a 7px halo is not somewhere the eye can be sent.
+   */
+  let ringAt = -1;
+  function placeRing(cell: number) {
+    if (!ring) return;
+    const r = stage.cellRect(cell);
+    const size = Math.max(r.w, 13);
+    ring.style.left = `${canvas.offsetLeft + r.x + r.w / 2 - size / 2}px`;
+    ring.style.top = `${canvas.offsetTop + r.y + r.w / 2 - size / 2}px`;
+    ring.style.width = `${size}px`;
+    ring.style.height = `${size}px`;
   }
 
   /** Run the fixed spark at the current density, animating the front. */
@@ -276,6 +300,7 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     rt = window.setTimeout(() => {
       stage.resize(canvas.parentElement!.getBoundingClientRect().width);
       repaintCurrent();
+      if (ring?.dataset.on === 'true' && ringAt >= 0) placeRing(ringAt);
     }, 120);
   });
 
@@ -297,6 +322,16 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
     spotlight(which) {
       if (which === 'none') delete root.dataset.spotlight;
       else root.dataset.spotlight = which;
+    },
+    showRing(cell) {
+      if (!ring) return;
+      if (cell == null || cell < 0) {
+        ring.dataset.on = 'false';
+        return;
+      }
+      ringAt = cell;
+      placeRing(cell);
+      ring.dataset.on = 'true';
     },
     onTrial(cb) {
       trialCbs.push(cb);

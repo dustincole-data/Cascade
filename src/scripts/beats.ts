@@ -51,8 +51,13 @@ export function runOnRamp(root: HTMLElement, ex: ExhibitHandle, strip: HTMLEleme
     strip,
     storageKey: KEY_DONE,
     sandbox: { prompt: SANDBOX_PROMPT, lesson: SANDBOX_LESSON },
+    // Beat 2's gate trips mid-drag, ~1.3s before the burn it describes has
+    // finished spreading. The dwell is what keeps the bigger scar on screen
+    // underneath its own lesson instead of half a second of it.
+    lessonDwellMs: 3400,
     onEnter(b) {
       ex.spotlight(b.spotlight as 'stage' | 'density');
+      if (b.n !== 1) ex.showRing(null); // beat 1's marker, and only beat 1's
       tick.dataset.on = String(b.n === 3);
       if (b.n === 3) placeTick();
     },
@@ -66,6 +71,7 @@ export function runOnRamp(root: HTMLElement, ex: ExhibitHandle, strip: HTMLEleme
     },
     onRelease() {
       tick.dataset.on = 'false';
+      ex.showRing(null);
       ex.spotlight('none');
       ex.setControlsMode('sandbox');
       ex.setSparkConstraint(null); // free play: any tree, honest outcome
@@ -76,10 +82,13 @@ export function runOnRamp(root: HTMLElement, ex: ExhibitHandle, strip: HTMLEleme
     },
   });
 
-  ex.onTrial((d) => {
+  ex.onTrial((d, _frac, cell) => {
     state.burnComplete = true;
     state.sparked = true;
     state.d = d;
+    // At d=0.40 the burn is one 2.8px cell. Mark where it died, or "a spark here
+    // goes nowhere" arrives with no *here* and reads as a tap that never landed.
+    if (runner.beat() === 1) ex.showRing(cell);
     runner.check();
   });
 

@@ -23,6 +23,9 @@ const startD = 0.4;
       sci="percolation · von-Neumann spread"
       stageLabel="Forest stage. Click a tree, or press Enter, to spark it."
     >
+      <Fragment slot="overlay">
+        <span class="stage-ring" data-on="false"></span>
+      </Fragment>
       <SignaturePlot
         slot="plot"
         id="plot"
