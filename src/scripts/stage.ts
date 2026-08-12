@@ -46,6 +46,20 @@ export interface StageSpec {
   H: number;
   /** Resting colour of cell `i`; null leaves the stage showing through. */
   bg(i: number): RGB | null;
+  /**
+   * Stage-space gap between resting cells. Discrete things (trees) want the
+   * default hairline so they read as separate objects; continuous material
+   * (sand) wants 0 — a gap on every cell is what turns a slope into a grid.
+   */
+  gap?: number;
+  /**
+   * Paint the resting field one pixel per cell and let the GPU interpolate it up
+   * to stage size, instead of stamping W×H hard-edged rectangles. Discrete things
+   * must stay crisp; continuous material must not, because a lattice of hard
+   * squares reads as mosaic tile no matter how the cells are coloured. The
+   * glowing front is drawn over the top at full resolution either way.
+   */
+  smooth?: boolean;
 }
 
 export interface Stage {
@@ -75,6 +89,10 @@ export const bandFor = (maxTick: number) => Math.max(4, Math.round(maxTick * 0.1
 
 export function createStage(canvas: HTMLCanvasElement, spec: StageSpec): Stage {
   const { W, H, bg } = spec;
+  const gapOverride = spec.gap;
+  const smooth = spec.smooth === true;
+  /** Smooth mode's backing store: one RGBA pixel per cell, scaled up on blit. */
+  const field = smooth ? new ImageData(W, H) : null;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const offscreen = document.createElement('canvas');
   let ctx = canvas.getContext('2d')!;
@@ -82,11 +100,27 @@ export function createStage(canvas: HTMLCanvasElement, spec: StageSpec): Stage {
   let cell = 4;
   let halo: { sprites: HTMLCanvasElement[]; R: number } = { sprites: [], R: 0 };
 
-  const gap = () => (cell >= 6 ? 0.6 : 0.3);
+  /* Below ~6px a cell is too small to carry a separator: a 0.3px hairline on
+     every cell stopped reading as "these are separate trees" and started reading
+     as a lattice drawn over the forest. Phones land squarely in that range. */
+  const gap = () => gapOverride ?? (cell >= 6 ? 0.6 : 0);
 
   function makeHalo() {
     const R = Math.round(cell * HALO_SCALE);
     halo = { sprites: haloSprites(R), R };
+  }
+
+  function resizeOffscreen(w: number, h: number) {
+    if (smooth) {
+      offscreen.width = W;
+      offscreen.height = H;
+      bgCtx = offscreen.getContext('2d')!;
+      return;
+    }
+    offscreen.width = w * dpr;
+    offscreen.height = h * dpr;
+    bgCtx = offscreen.getContext('2d')!;
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   function resize(cssWidth: number, maxHeight = Infinity) {
@@ -100,17 +134,22 @@ export function createStage(canvas: HTMLCanvasElement, spec: StageSpec): Stage {
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    offscreen.width = w * dpr;
-    offscreen.height = h * dpr;
     ctx = canvas.getContext('2d')!;
-    bgCtx = offscreen.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    resizeOffscreen(w, h);
     makeHalo();
   }
 
   function paintCell(i: number) {
     const c = bg(i);
+    if (field) {
+      const p = i * 4;
+      field.data[p] = c ? c[0] | 0 : 0;
+      field.data[p + 1] = c ? c[1] | 0 : 0;
+      field.data[p + 2] = c ? c[2] | 0 : 0;
+      field.data[p + 3] = c ? 255 : 0;
+      return;
+    }
     const x = (i % W) * cell;
     const y = ((i / W) | 0) * cell;
     const s = cell - gap();
@@ -124,11 +163,21 @@ export function createStage(canvas: HTMLCanvasElement, spec: StageSpec): Stage {
 
   function blit() {
     ctx.clearRect(0, 0, W * cell, H * cell);
+    if (field) {
+      // The one-pixel-per-cell field has to reach the canvas through drawImage
+      // (putImageData ignores both smoothing and the dpr transform).
+      bgCtx.putImageData(field, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(offscreen, 0, 0, W * cell, H * cell);
+      ctx.imageSmoothingEnabled = false;
+      return;
+    }
     ctx.drawImage(offscreen, 0, 0, W * cell, H * cell);
   }
 
   function paintAll() {
-    bgCtx.clearRect(0, 0, W * cell, H * cell);
+    if (!field) bgCtx.clearRect(0, 0, W * cell, H * cell);
     for (let i = 0; i < W * H; i++) paintCell(i);
     blit();
   }

@@ -1,4 +1,4 @@
-import { HEIGHT, lerpStops, type RGB } from '../lib/palette.ts';
+import { grainJitter, reliefShade, sandColor, type RGB } from '../lib/palette.ts';
 import { KEY_PILE_BIGGEST } from '../lib/pile-config.ts';
 import {
   CHARGE_GRAINS,
@@ -28,7 +28,11 @@ import { bandFor, createStage, type Stage } from './stage.ts';
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** The resting field is dimmed (fire's own value) so a white-hot topple keeps its
  *  contrast against a field that is already warm. */
-const PILE_DIM = 0.52;
+/* Sand is a lit surface, not a dark one. The teal field this replaced could sit
+   at half brightness because the warm front read against it on hue alone; sand
+   and fire share a hue family, so the resting table carries its own light and
+   the front separates on saturation and bloom instead. */
+const PILE_DIM = 0.68;
 /** A square 64² table in a landscape panel: fit it to the plot panel's height and
  *  centre it, rather than letting a full-width square blow the frame's proportions. */
 const STAGE_MAX_H = 510;
@@ -109,14 +113,31 @@ export function createPileExhibit(root: HTMLElement, opts: { seed: number }): Pi
   const eventCbs: ((a: Avalanche, cell: number) => void)[] = [];
   const weatherCbs: ((g: number) => void)[] = [];
 
-  /** Cool→warm by height: the field visibly heats as it self-loads (🔒 ticket 04, fork 3). */
-  function cellBg(i: number): RGB {
-    const h = pre && !reached[i] ? pre[i]! : pile.h[i]!;
-    const c = lerpStops(HEIGHT, Math.min(3, h) / 3);
-    return [c[0] * PILE_DIM, c[1] * PILE_DIM, c[2] * PILE_DIM];
+  /** Height of cell `i` as currently shown — mid-avalanche, cells the front has
+   *  not reached yet are still displaying their pre-event height. */
+  function shownH(i: number): number {
+    return pre && !reached[i] ? pre[i]! : pile.h[i]!;
   }
 
-  const stage: Stage = createStage(canvas, { W, H, bg: cellBg });
+  /**
+   * The table lit from the upper left: sand ramp by height, then shaded by the
+   * rise over the neighbours up and to the left (🔒 ticket 04, fork 3 — the
+   * cool→warm *direction* is kept, the hue is not: the field still visibly heats
+   * as it self-loads, in sand rather than in the forest's teal).
+   */
+  function cellBg(i: number): RGB {
+    const h = shownH(i);
+    const x = i % W;
+    const y = (i / W) | 0;
+    const c = sandColor(h);
+    const s =
+      reliefShade(h, x > 0 ? shownH(i - 1) : h, y > 0 ? shownH(i - W) : h) *
+      grainJitter(i) *
+      PILE_DIM;
+    return [Math.min(255, c[0] * s), Math.min(255, c[1] * s), Math.min(255, c[2] * s)];
+  }
+
+  const stage: Stage = createStage(canvas, { W, H, bg: cellBg, gap: 0, smooth: true });
   const plot: SurvivalHandle = attachSurvival(svg);
 
   const fmt = (n: number) => n.toLocaleString('en-US');

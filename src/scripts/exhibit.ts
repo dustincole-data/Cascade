@@ -8,12 +8,14 @@ import {
   type Burn,
   type Field,
 } from '../lib/forest-fire.ts';
-import { SCAR, TEAL, lerpStops, type RGB } from '../lib/palette.ts';
+import { FLOOR, SCAR, TEAL, lerpStops, type RGB } from '../lib/palette.ts';
 import { attachPlot, type PlotHandle } from './plot.ts';
 import { bandFor, createStage, type Stage } from './stage.ts';
 
 /** The forest dims so the burning front keeps its contrast (locked look, ticket 01). */
-const FOREST_DIM = 0.52;
+/* Raised with the floor: once the clearings stopped being pure black the canopy
+   no longer had to fight the stage, so it can carry its own colour. */
+const FOREST_DIM = 0.68;
 
 export interface ExhibitOpts {
   grid: { W: number; H: number };
@@ -64,7 +66,12 @@ export function createExhibit(root: HTMLElement, opts: ExhibitOpts): ExhibitHand
    * frame the front doesn't cover (idle, tab-restore, resize).
    */
   function cellBg(i: number): RGB | null {
-    if (!isTree(field, i, density)) return null;
+    if (!isTree(field, i, density)) {
+      // Clearings are floor, not void — the same per-cell shade the canopy uses,
+      // so the ground under the forest varies the way the forest does.
+      const g = 0.82 + 0.36 * field.shade[i]!;
+      return [FLOOR[0] * g, FLOOR[1] * g, FLOOR[2] * g];
+    }
     const t = result ? result.ig[i]! : -1;
     if (t < 0 || t > tick) {
       const c = lerpStops(TEAL, field.shade[i]!);

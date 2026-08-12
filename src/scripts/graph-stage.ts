@@ -44,6 +44,8 @@ export interface GraphStage {
 
 const EDGE_LIVE = 'rgba(90,150,140,0.30)';
 const EDGE_DARK = 'rgba(70,80,96,0.10)';
+/** The empty socket a dead node leaves behind — read against both stage and canopy. */
+const NODE_DEAD = 'rgba(150,120,110,0.55)';
 /** Nodes sit inside this much padding so an edge node's halo is never clipped. */
 const PAD = 16;
 
@@ -67,7 +69,10 @@ export function createGraphStage(canvas: HTMLCanvasElement, spec: GraphSpec): Gr
   function resize(cssWidth: number, maxHeight = Infinity) {
     w = Math.max(240, cssWidth);
     h = Math.min(maxHeight, Math.round(w * 0.72));
-    base = Math.max(3, Math.min(w, h * 1.4) / 108);
+    // Node scale tracks the stage, but a phone-sized stage was landing at ~2–4px
+    // dots — too small to read as "a piece of infrastructure" and too small to
+    // aim at. The floor rises as the stage shrinks rather than staying fixed.
+    base = Math.max(w < 520 ? 4.2 : 3, Math.min(w, h * 1.4) / (w < 520 ? 84 : 108));
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
@@ -89,12 +94,24 @@ export function createGraphStage(canvas: HTMLCanvasElement, spec: GraphSpec): Gr
     }
     for (let i = 0; i < n; i++) {
       const c = spec.color(i);
-      if (!c) continue;
+      if (!c) {
+        // A node that has gone dark is DRAWN dark, not skipped. Omitting it left
+        // an absence, and on a field of 180 dots a missing dot is invisible —
+        // which is why knocking one out looked like the click had done nothing.
+        // A hollow socket is a thing you can see: the grid is missing a piece.
+        ctx.strokeStyle = NODE_DEAD;
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.arc(px(i), py(i), radius(i), 0, Math.PI * 2);
+        ctx.stroke();
+        continue;
+      }
       ctx.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
       ctx.beginPath();
       ctx.arc(px(i), py(i), radius(i), 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.lineWidth = 1;
   }
 
   function paintFront(nodes: number[], age: (i: number) => number, shimmer: number) {
@@ -131,8 +148,11 @@ export function createGraphStage(canvas: HTMLCanvasElement, spec: GraphSpec): Gr
       }
     }
     // Generous: clicking a wire's midpoint should not silently do nothing, but a
-    // click way off the grid should miss.
-    return bestD <= (base * 4) ** 2 ? best : null;
+    // click way off the grid should miss. A finger is not a cursor, so a coarse
+    // pointer gets a target it can actually hit — the nodes are ~5px wide.
+    const coarse = matchMedia('(pointer: coarse)').matches;
+    const reach = base * (coarse ? 7 : 4);
+    return bestD <= reach ** 2 ? best : null;
   }
 
   /**

@@ -39,8 +39,65 @@ export const HEIGHT: Stop[] = [
   [1, hex2rgb('#ffd166')],
 ];
 
-/** Spent scar — a hair above the stage so the burned region still reads. */
-export const SCAR: RGB = hex2rgb('#31281c');
+/**
+ * The sandpile's own ramp. HEIGHT (above) encodes the same 0→3 quantity in the
+ * forest's teal, which is why the charged table read as woven camo rather than
+ * sand — the material was wearing another exhibit's colour. This runs bare table
+ * → shadowed sand → lit sand → the pale gold of a cell one grain from toppling.
+ * Sequential with monotone luminance, so it is CVD-safe by the same rule as FIRE.
+ */
+/* Nearly flat across 0→2, then a jump into 3. A critical BTW field is spatially
+   uncorrelated — neighbours sit at 0 and 3 constantly — so any ramp that spends
+   its full range on those four values renders the physics faithfully and reads
+   as a hard checkerboard. Holding 0–2 inside one narrow band of sand lets the
+   table read as a single continuous material, and spends all the remaining
+   contrast where it carries the argument: height 3, a cell one grain from
+   toppling, glinting across the whole surface. Still monotone in luminance, so
+   it stays CVD-safe by the same rule as FIRE. */
+export const SAND: Stop[] = [
+  [0, hex2rgb('#7d6440')],
+  [0.34, hex2rgb('#96784b')],
+  [0.67, hex2rgb('#b4915e')],
+  [1, hex2rgb('#f2e0b6')],
+];
+
+/* Sand is granular below the scale of the simulation. A stable per-cell jitter
+   of a few percent gives the surface a grain that does not move when the pile
+   does, so the material reads as material rather than as flat fill. */
+export const grainJitter = (i: number): number => {
+  const h = Math.imul(i ^ 0x9e3779b9, 0x85ebca6b);
+  return 0.955 + (((h ^ (h >>> 15)) >>> 8) & 0xff) / 255 * 0.09;
+};
+
+/** Colour of a cell holding `h` grains (0–3), before relief shading. */
+export const sandColor = (h: number): RGB => lerpStops(SAND, Math.max(0, Math.min(3, h)) / 3);
+
+/**
+ * Directional relief. A heightfield painted in flat per-cell colour has no
+ * surface — every neighbour reads as an unrelated tile, which is the checkerboard.
+ * Lighting each cell by how far it rises above the neighbours up and to its left
+ * turns the same numbers into a granular slope you can see the shape of.
+ */
+export const reliefShade = (h: number, hLeft: number, hUp: number): number =>
+  Math.max(0.78, Math.min(1.2, 1 + (h - hLeft + (h - hUp)) * 0.07));
+
+/**
+ * Spent scar. This used to be #31281c — a hair above the stage, which on a
+ * 60%-empty lattice made a burned cell and an empty cell the same near-black.
+ * Beat 1's whole lesson is a spark that goes nowhere *and leaves a small scar
+ * you can see*; with no visible ash the beat read as a broken page. Ash is the
+ * one thing on this stage that is neither alive nor burning, so it is the one
+ * thing that is neutral grey.
+ */
+export const SCAR: RGB = hex2rgb('#6a6055');
+
+/**
+ * Forest floor. The gaps between trees were the stage itself showing through —
+ * pure near-black against a saturated canopy, which is maximum local contrast
+ * on a field that is mostly gaps. That is what made the forest read as green
+ * confetti on a void rather than a canopy with clearings in it.
+ */
+export const FLOOR: RGB = hex2rgb('#1d2026');
 
 export function lerpStops(stops: Stop[], t: number): RGB {
   const u = Math.max(0, Math.min(1, t));

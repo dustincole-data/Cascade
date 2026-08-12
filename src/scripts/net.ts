@@ -35,6 +35,8 @@ const BAND = 8;
 /** Ticks between cascade rounds — a round of failures flashes, then the next. */
 const ROUND_TICKS = 5;
 const RESTORE_MS = 600;
+/** How long the blacked-out grid stays on screen before the lights sweep back. */
+const HOLD_MS = 1500;
 
 export type NetPhase = 'beat1' | 'beat2' | 'beat3' | 'sandbox';
 
@@ -174,7 +176,12 @@ export function createNetExhibit(root: HTMLElement, opts: { seed?: number } = {}
     anim = null;
     stage.paint();
     landEvent(a.c, a.node);
-    restore();
+    // Hold the dark grid before the lights come back (🔒 ticket 07, D8 keeps the
+    // restore; this only delays it). The cascade plus the relight ran straight
+    // through in well under a second, so on a phone — where you tap, then look —
+    // the grid was already whole again by the time you looked up, and the
+    // readout was describing a state that was no longer on screen.
+    holdTimer = window.setTimeout(restore, HOLD_MS);
   }
 
   /** The event lands: the readouts, the record, and the bright plot dot at rank. */
@@ -186,6 +193,15 @@ export function createNetExhibit(root: HTMLElement, opts: { seed?: number } = {}
   }
 
   function knockOut(node: number) {
+    // A tap during the hold means they are done looking: drop the dark grid,
+    // relight instantly and run the new one. The hold guarantees the result is
+    // seen; it must not also make the exhibit feel locked.
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = 0;
+      alive.fill(1);
+      busy = false;
+    }
     if (busy || !alive[node]) return;
     busy = true;
     tried++;
@@ -222,6 +238,7 @@ export function createNetExhibit(root: HTMLElement, opts: { seed?: number } = {}
 
   /* ── restore: the grid comes back up (🔒 ticket 07, D8) ───────────────────── */
   let restoreRaf = 0;
+  let holdTimer = 0;
   let restoreStart = 0;
   /** Relight order: left to right, so it reads as power sweeping back in. */
   const relightOrder = [...Array(n).keys()].sort((a, b) => g.xs[a]! - g.xs[b]!);
@@ -308,7 +325,8 @@ export function createNetExhibit(root: HTMLElement, opts: { seed?: number } = {}
   function reset() {
     cancelAnimationFrame(raf);
     cancelAnimationFrame(restoreRaf);
-    raf = restoreRaf = 0;
+    clearTimeout(holdTimer);
+    raf = restoreRaf = holdTimer = 0;
     busy = false;
     anim = null;
     alive.fill(1);
